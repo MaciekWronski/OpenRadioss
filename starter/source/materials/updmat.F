@@ -159,7 +159,7 @@ c
         CALL FRETITL2(TITR,IPM(NPROPMI-LTITR+1,IMAT),LTITR)
 c
         IADD     = MAX(1,IPM(7,IMAT))
-        NPARAM  = MIN(IPM(9,IMAT),SBUFMAT)
+        NPARAM   = MIN(IPM(9,IMAT),SBUFMAT)
         UPARAM   => BUFMAT(IADD:IADD+NPARAM-1) 
         MATPARAM => MATPARAM_TAB(IMAT)
 c
@@ -261,7 +261,9 @@ c------------------
           CASE (98)    ! 
 c------------------
 c
-C           CALL LAW98_UPD(IOUT,TITR,MAT_ID  ,UPARAM,IPM,FUNC_ID,NPC,PLD,PM(1,IMAT))
+            CALL LAW98_IDENTPAR(IOUT      ,TITR      ,MAT_ID   ,NPARAM  ,MATPARAM ,
+     .                       UPARAM    ,NUMTABL   ,ITABLE   ,TABLE    ,PM(1,IMAT),
+     .                       SENSOR_TAB)
 c
 c------------------
           CASE (100)    ! parallel network model

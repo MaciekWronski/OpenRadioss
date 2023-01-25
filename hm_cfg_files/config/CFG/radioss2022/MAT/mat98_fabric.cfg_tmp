@@ -1,0 +1,283 @@
+//Copyright>    CFG Files and Library ("CFG")
+//Copyright>    Copyright (C) 1986-2023 Altair Engineering Inc.
+//Copyright>
+//Copyright>    Altair Engineering Inc. grants to third parties limited permission to
+//Copyright>    use and modify CFG solely in connection with OpenRadioss software, provided
+//Copyright>    that any modification to CFG by a third party must be provided back to
+//Copyright>    Altair Engineering Inc. and shall be deemed a Contribution under and therefore
+//Copyright>    subject to the CONTRIBUTOR LICENSE AGREEMENT for OpenRadioss software.
+//Copyright>
+//Copyright>    CFG IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+//Copyright>    INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+//Copyright>    A PARTICULAR PURPOSE, AND NONINFRINGEMENT.  IN NO EVENT SHALL ALTAIR ENGINEERING
+//Copyright>    INC. OR ITS AFFILIATES BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+//Copyright>    WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
+//Copyright>    IN CONNECTION WITH CFG OR THE USE OR OTHER DEALINGS IN CFG.
+// Mater_file (USER) Setup File
+
+ATTRIBUTES(COMMON) 
+{
+    KEYWORD_STR             = VALUE(STRING, "Solver Keyword");
+    NUM_COMMENTS            = SIZE("NUM_COMMENTS");
+    CommentEnumField        = VALUE(INT,"User Comments");
+    COMMENTS                = ARRAY[NUM_COMMENTS](STRING,"Entity Comments");
+    MAT_RHO                 = VALUE(FLOAT,"Initial Density");
+    Refer_Rho               = VALUE(FLOAT,"Reference Density (for lower than 14.0 version)");
+    DUMMY                   = VALUE(STRING,"Dummy variable for Ref_Rho flag");
+    MAT_REFRHO_Option       = VALUE(INT, "RefRho_Option");
+    MAT_E1                  = VALUE(FLOAT,"Young's Modulus in Warp Direction");
+    MAT_E2                  = VALUE(FLOAT,"Young's Modulus in Weft Direction");
+    MAT_G0                  = VALUE(FLOAT,"Initial Shear Modulus");
+    MAT_GI                  = VALUE(FLOAT,"Tangent Shear Modulus");
+    MAT_ALPHA               = VALUE(FLOAT,"Shear Lock Angle");
+    MAT_G5                  = VALUE(FLOAT,"Transverse Shear Modulus (only used with multi-layered property");
+    SENS_ID                 = VALUE(SENSOR,"Sensor Identifier") { SUBTYPES = (/SENSOR/SENSOR_DEFINE) ; }
+    MAT_Df                  = VALUE(FLOAT,"Fiber Damping Coef.");
+    MAT_dS                  = VALUE(FLOAT,"Friction Coefficient in Shear");
+    Friction_phi            = VALUE(FLOAT,"Friction Modulus");
+    Zerostress          = VALUE(FLOAT,"Zerostress:Zero  Stress Relative Area");
+    FUN_BL1                 = VALUE(FUNCT,"Function Defining Biaxial loading in Warp Direction");
+    MAT_BL1                 = VALUE(FLOAT,"Scale Factor for Ordinate of FUN_BL1");
+    FUN_BL2                 = VALUE(FUNCT,"Function Defining Biaxial loading in Weft Direction");
+    MAT_BL2                 = VALUE(FLOAT,"Scale Factor for Ordinate of FUN_BL2");
+    FUN_UL1                 = VALUE(FUNCT,"Function Defining uniaxial loading stress in warp direction");
+    MAT_UL1                 = VALUE(FLOAT,"Scale Factor for Ordinate of FUN_UL1");
+    FUN_UL2                 = VALUE(FUNCT,"Function Defining uniaxial loading stress in weft direction");
+    MAT_UL2                 = VALUE(FLOAT,"Scale Factor for Ordinate of FUN_UL1");
+    FUN_SL                  = VALUE(FUNCT,"Function Identifier for shear loading stress vs shear angle");
+    MAT_SL                  = VALUE(FLOAT,"Scale Factor for Ordinate of FUN_SL");
+    IO_FLAG                 = VALUE(INT, "");
+    LAW_NO                  = VALUE(STRING, "");
+    Mat_Name_OR_LawNo       = VALUE(INT, "");
+    TITLE                   = VALUE(STRING,"");
+    Heat_Inp_opt            = VALUE(INT,   "Heat");  
+    SUBGRP_HEAT_MAT         = VALUE(SUBOBJECT, "");
+    THERM_STRESS            = VALUE(INT,"Therm Stress");
+    SUBGRP_THERM_STRESS     = VALUE(SUBOBJECT, "");
+    LEAK_MAT_INPUT          = VALUE(INT,  "LEAK_MAT_INPUT");
+    SUBGRP_LEAK_MAT         = VALUE(SUBOBJECT,"");
+}
+
+SKEYWORDS_IDENTIFIER(COMMON)
+{
+    KEYWORD_STR                         = 9000;
+    COMMENTS                            = 5109;
+    CommentEnumField                    = 7951;
+    MAT_REFRHO_Option                   = 4285;
+    MAT_RHO                             = 118;
+    Refer_Rho                           = 4229;
+    FUN_BL1                             = 45;
+    FUN_BL2                             = 170;
+    FUN_UL1                             = 172;
+    FUN_UL2                             = 200;
+    FUN_SL                              = 1141;
+    Friction_phi                        = 4586;
+    SENS_ID                             = 5157;
+    Zerostress                      = 4579;
+    MAT_ALPHA                           = 349;
+    MAT_Df                              = 123;
+    MAT_E1                              = 1127;
+    MAT_E2                              = 1129;
+    MAT_G0                              = 304;
+    MAT_G5                              = 5327;
+    MAT_GI                              = 305;
+    MAT_dS                              = 4273;
+    MAT_UL2                             = 4531;
+    MAT_SL                              = 4532;
+    NUM_COMMENTS                        = 5110;
+    Heat_Inp_opt                        = 4346;
+    SUBGRP_HEAT_MAT                     = -1;
+    THERM_STRESS                        = 4555;
+    SUBGRP_THERM_STRESS                 = -1;
+    LEAK_MAT_INPUT                      = 2900;
+    SUBGRP_LEAK_MAT                     = -1;
+    DUMMY                               = -1;
+    Mat_Name_OR_LawNo                   = 4538;
+    LAW_NO                              = -1;
+    IO_FLAG                             = -1;
+    TITLE                               = -1;
+}
+
+DRAWABLES(COMMON) {
+    public:
+    INITIAL_DENSITY         = SCALAR(MAT_RHO);
+    MAT_E1                  = SCALAR(MAT_E1);
+    MAT_E2                  = SCALAR(MAT_E2);
+    YOUNG_MODULUS           = MAX(MAT_E1,MAT_E2);
+    public:
+    SOUND_SPEED             = EVAL((YOUNG_MODULUS/INITIAL_DENSITY)^0.5);
+    private:
+    G                 = EVAL(YOUNG_MODULUS/2);
+    C1                = EVAL(YOUNG_MODULUS/3);
+    public:
+    SOUND_SPEED_SOLID = EVAL(((4*G/3+C1)/INITIAL_DENSITY)^0.5);
+}
+
+CHECK(COMMON)
+{
+    MAT_Df          >0.0;
+    MAT_Df          <1.0;
+    MAT_E1          >0.0;
+    MAT_E2          >0.0;
+    MAT_RHO         >0.0;
+}
+
+DEFAULTS(COMMON)
+{
+    MAT_Df          = 0.05;
+    MAT_dS          = 0.00;
+    MAT_BL1         = 1.0;
+    MAT_BL2         = 1.0;
+    MAT_UL1         = 1.0;
+    MAT_UL2         = 1.0;
+    MAT_SL          = 1.0;
+    Mat_Name_OR_LawNo = 0;
+}
+
+GUI(COMMON) 
+{
+    RADIO(CommentEnumField)
+    {
+        ENUM_VALUE_FLAG=TRUE;
+        ADD(1, "Hide in Menu/Export");
+        ADD(2, "Show in Menu/Export");
+        ADD(3, "Do Not Export");
+    }
+    if(CommentEnumField == 2)
+    {  
+        SIZE(NUM_COMMENTS);
+        ARRAY(NUM_COMMENTS,"")
+        {
+            SCALAR(COMMENTS);
+        }   
+    }
+    if( Mat_Name_OR_LawNo ==2)
+    {
+        ASSIGN(KEYWORD_STR, "/MAT");
+        ASSIGN(KEYWORD_STR, "/LAW98/");
+    }
+    else
+    {
+        ASSIGN(KEYWORD_STR, "/MAT");
+        ASSIGN(KEYWORD_STR, "/ANI_FAB/");
+
+    }  
+    FLAG(MAT_REFRHO_Option);
+    if(MAT_REFRHO_Option!=FALSE)
+    {
+        SCALAR(Refer_Rho){ DIMENSION="density";}
+    }
+mandatory:
+    SCALAR(MAT_RHO)     { DIMENSION="density";}
+optional:
+    SCALAR(MAT_E1)      { DIMENSION="pressure";      }
+    SCALAR(MAT_E2)      { DIMENSION="pressure";      }
+    SCALAR(MAT_G0)      { DIMENSION="pressure";      }
+    SCALAR(MAT_GI)      { DIMENSION="pressure";      }
+    SCALAR(MAT_ALPHA)   { DIMENSION="a";   }
+    SCALAR(MAT_G5)      { DIMENSION="pressure";      }
+    DATA(SENS_ID);
+    SCALAR(MAT_Df)      { DIMENSION="DIMENSIONLESS"; }
+    SCALAR(MAT_dS)      { DIMENSION="DIMENSIONLESS"; }
+    SCALAR(Friction_phi)      { DIMENSION="pressure";}
+    SCALAR(Zerostress)  { DIMENSION="DIMENSIONLESS"; }
+
+    DATA(FUN_BL1);
+    SCALAR(MAT_BL1)     { DIMENSION="pressure"; }
+    DATA(FUN_BL2);
+    SCALAR(MAT_BL2)     { DIMENSION="pressure"; }
+    DATA(FUN_UL1);
+    SCALAR(MAT_UL1)     { DIMENSION="pressure"; }
+    DATA(FUN_UL2);
+    SCALAR(MAT_UL2)     { DIMENSION="pressure"; }
+    DATA(FUN_SL);
+    SCALAR(MAT_SL)     { DIMENSION="pressure"; }
+
+        graphical FLAG(Heat_Inp_opt);
+    if (Heat_Inp_opt!= 0) {
+        SUBOBJECT(SUBGRP_HEAT_MAT) {SUBTYPES = (/SUBOBJECT/HEAT);}  
+    }
+    graphical FLAG(THERM_STRESS);
+    if (THERM_STRESS!= 0) {
+        SUBOBJECT(SUBGRP_THERM_STRESS) {SUBTYPES = (/SUBOBJECT/THERM_STRESS);}  
+    } 
+    graphical FLAG(LEAK_MAT_INPUT);
+    if(LEAK_MAT_INPUT != 0){
+        SUBOBJECT(SUBGRP_LEAK_MAT) {SUBTYPES = (/SUBOBJECT/LEAK);}
+    }
+    /*
+    graphical SUPPORT("Support") {
+    OBJECTS=(/COMPONENT/SHELL);
+    ADD(COMPONENT,"Parts");
+    } 
+    */  
+}  
+
+FORMAT(radioss2022) 
+{
+    ASSIGN(IO_FLAG, 0, EXPORT);
+    ASSIGN(IO_FLAG, 1, IMPORT);
+    if (IO_FLAG == 1)
+    {
+        HEADER("/MAT/%3s",LAW_NO);
+        if(LAW_NO == "LAW" )
+        {
+            ASSIGN(Mat_Name_OR_LawNo,2);
+        }
+    }
+    else if(IO_FLAG == 0 && Mat_Name_OR_LawNo == 2)
+    {
+        HEADER("/MAT/LAW98/%d",_ID_);
+        CARD("%-100s", TITLE);
+    }
+    else
+    {
+        HEADER("/MAT/FABR_A/%d", _ID_);
+        CARD("%-100s", TITLE);
+    }
+    CARD_PREREAD("                    %20s",DUMMY);
+    if(DUMMY!="")
+    {
+        ASSIGN(MAT_REFRHO_Option,1,IMPORT);
+    }
+    else
+    {
+        ASSIGN(MAT_REFRHO_Option,0,IMPORT);
+    }
+    if(MAT_REFRHO_Option!=FALSE)
+    {
+        COMMENT("#              RHO_I               RHO_O");
+        CARD("%20lg%20lg",MAT_RHO,Refer_Rho);
+    }
+    else{
+        COMMENT("#              RHO_I");
+        CARD("%20lg",MAT_RHO);
+    }
+    
+    COMMENT("#                 E1                  E2     Isens          ZEROSTRESS");
+    CARD("%20lg%20lg%10d%20lg",MAT_E1,MAT_E2,SENS_ID,Zerostress);
+
+    COMMENT("#  FCT_BL1                       Fscale1");
+    CARD("%10d          %20lg",FUN_BL1,MAT_BL1);
+    COMMENT("#  FCT_ID2                       Fscale2");
+    CARD("%10d          %20lg",FUN_BL2,MAT_BL2);
+    COMMENT("#  FCT_ID3                       Fscale3");
+    CARD("%10d          %20lg",FUN_UL1,MAT_UL1);
+    COMMENT("#  FCT_ID4                       Fscale4");
+    CARD("%10d          %20lg",FUN_UL2,MAT_UL2);
+    COMMENT("#  FCT_ID5                       Fscale5");
+    CARD("%10d          %20lg",FUN_SL,MAT_SL);
+
+    if(Heat_Inp_opt!=0)
+    {
+        SUBOBJECTS(SUBGRP_HEAT_MAT,/SUBOBJECT/HEAT);
+    }
+    if(Heat_Inp_opt!=0 && THERM_STRESS !=0)
+    {
+        SUBOBJECTS(SUBGRP_THERM_STRESS,/SUBOBJECT/THERM_STRESS);
+    }
+    if(LEAK_MAT_INPUT != 0)
+    {
+        SUBOBJECTS(SUBGRP_LEAK_MAT, /SUBOBJECT/LEAK);
+    }
+}

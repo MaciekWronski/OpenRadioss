@@ -1,28 +1,7 @@
-Copyright>        OpenRadioss
-Copyright>        Copyright (C) 1986-2023 Altair Engineering Inc.
-Copyright>
-Copyright>        This program is free software: you can redistribute it and/or modify
-Copyright>        it under the terms of the GNU Affero General Public License as published by
-Copyright>        the Free Software Foundation, either version 3 of the License, or
-Copyright>        (at your option) any later version.
-Copyright>
-Copyright>        This program is distributed in the hope that it will be useful,
-Copyright>        but WITHOUT ANY WARRANTY; without even the implied warranty of
-Copyright>        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-Copyright>        GNU Affero General Public License for more details.
-Copyright>
-Copyright>        You should have received a copy of the GNU Affero General Public License
-Copyright>        along with this program.  If not, see <https://www.gnu.org/licenses/>.
-Copyright>
-Copyright>
-Copyright>        Commercial Alternative: Altair Radioss Software
-Copyright>
-Copyright>        As an alternative to this open-source version, Altair also offers Altair Radioss
-Copyright>        software under a commercial license.  Contact Altair to discuss further if the
-Copyright>        commercial version may interest you: https://www.altair.com/radioss/.
 Chd|====================================================================
 Chd|  LOSSFUN_98                    source/materials/mat/mat098/lossfun_98.F
 Chd|-- called by -----------
+Chd|        LAW98_UPD                     source/materials/mat/mat098/law98_upd.F
 Chd|-- calls ---------------
 Chd|        CALC_UNIAX                    source/materials/mat/mat098/lossfun_98.F
 Chd|        CALC_UNIAX_2                  source/materials/mat/mat098/lossfun_98.F
@@ -31,9 +10,9 @@ Chd|        FCT_FIBER_2                   source/materials/mat/mat098/lossfun_98
 Chd|        MESSAGE_MOD                   share/message_module/message_mod.F
 Chd|        TABLE_MOD                     share/modules1/table_mod.F    
 Chd|====================================================================
-      SUBROUTINE LOSSFUN_98(NVAR,NDC,X,FUN,DFUN,CONS,DCONS,IGOTO,
-     .                    NPC,PLD ,IFUNC,NFUNC,UPARAM,LENC,LENT,
-     .                    XBIA,NPTBI,ISYM )
+      SUBROUTINE LOSSFUN_98(NVAR,X,FUN,DFUN,IGOTO,
+     .                      NPC,PLD ,IFUNC,NFUNC,YFAC,LENC,LENT,
+     .                      XBIA,NPTBI,ISYM )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -51,23 +30,23 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
-      !CHARACTER*nchartitle :: TITR
-      !INTEGER  , DIMENSION(NFUNC)      :: IFUNC,FUNC_ID
-      INTEGER     IGOTO ,SIZEPN,NPTBI
-      INTEGER     NVAR,NDC
+      INTEGER   :: NFUNC,NVAR
+      INTEGER   :: IGOTO ,SIZEPN,NPTBI
+      INTEGER  ,DIMENSION(NFUNC) ,INTENT(IN) :: IFUNC
+      my_real  ,DIMENSION(NFUNC) ,INTENT(IN) :: YFAC
       my_real  
-     .     CONS(*),DCONS(*),X(NVAR),UPARAM(*),FUN(NVAR),DFUN(NVAR),
+     .     X(NVAR),FUN(NVAR),DFUN(NVAR),
      .     XBIA(NPTBI)
 !      TYPE(TTABLE) TABLE(*)
 C-----------------------------------------------
 C   VARIABLES FOR FUNCTION INTERPOLATION 
 C-----------------------------------------------
-      INTEGER NPC(*), NFUNC, IFUNC(NFUNC)
+      INTEGER NPC(*)
       my_real FINTER ,PLD(*)
       EXTERNAL FINTER
 C-----------------------------------------------
        INTENT(IN)    :: NPC,PLD,IGOTO ,XBIA,NPTBI
-       INTENT(INOUT) :: FUN,DFUN,CONS,DCONS
+       INTENT(INOUT) :: FUN,DFUN
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -77,8 +56,8 @@ C-----------------------------------------------
      .      EMBC,EMBT,Y,FMINS,FMINF,DEMBC,EMBCP,FLEXP,
      .      FLEX1,FLEX2,LC0,LT0,DC0,DT0,HC0,HT0,KC,KT,KFC,KFT,
      .      HC,HT,DCC,DC,DT,UDC,UDT,HDC,HDT,FC,FT,FPC,FPT,KF,
-     .      DERIC,DTT,FUNC,DCP,DTP, T1,T2,A1,A2,DFLEX,FLEX2P,FLEX1P,
-     .      FMINC,FMINT,FMINC2,FMINS2,FMINF2,FMINF1,YP,EMBTP,DEMBT,YFAC(8)
+     .      DERIC,DTT,FUNC,DCP,DTP, T1,T2,A1,A2,DFLEX,DFLEX1,DFLEX2,FLEX2P,FLEX1P,
+     .      FMINC,FMINT,FMINC2,FMINS2,FMINF2,FMINF1,YP,EMBTP,DEMBT
 
       my_real
      .      EC(LENC),FCU(LENC),LC(LENC),YC(LENC),SIGC(LENC), 
@@ -108,13 +87,11 @@ c----------------------------
       FLEX1= X(2)
       FLEX2= X(4)
       DEMBC = MAX(EM03 * EMBC, EM10)
-      DFLEX = MAX(EM03 * FLEX1, EM10)
+      DFLEX1 = MAX(EM03 * FLEX1, EM10)
+      DFLEX2 = MAX(EM03 * FLEX2, EM10)
       DEMBT = MAX(EM03 * EMBT, EM10)
 
       NITER= 5
-      DO I=1,8! NFUNC
-       YFAC(I)= UPARAM(8+I)  
-      ENDDO
       DC0 = ONE+EMBC
       HC0 = SQRT(DC0*DC0 - ONE)
 
@@ -187,7 +164,7 @@ C----------------------------------------------------------
          !PERTURBATION FLEX DIRECTION CHAINE  = FMINF1 ET FMINF2
          EMBC  = X(1)
          EMBT  = X(3)
-         FLEXP = X(2) + DFLEX
+         FLEXP = X(2) + DFLEX1
          FLEX2 = X(4)
          DC0 = ONE + EMBC
          HC0 = SQRT(DC0*DC0 - ONE)
@@ -216,9 +193,9 @@ c
            FMINF2 = FMINF2 + A1**2 !somme de la difference des carres
          ENDDO !LENT   
 c        FMINF   = SQRT(FMINF)                                        
-         DFUN(2) = (FMINF1 + FMINF2 - FMINC - FMINT) / DFLEX                                     
+         DFUN(2) = (FMINF1 + FMINF2 - FMINC - FMINT) / DFLEX1                                     
 C----------------------------------------------------------
-c     DERIVATIVES - TRAME
+c        DERIVATIVES - TRAME
 C----------------------------------------------------------
          FMINF1 = ZERO
          FMINF2 = ZERO
@@ -247,7 +224,7 @@ C----------------------------------------------------------
          EMBC = X(1)
          EMBT = X(3)
          FLEX1= X(2)
-         FLEXP = X(4) + DFLEX
+         FLEXP = X(4) + DFLEX2
 
          DC0 = ONE + EMBC
          HC0 = SQRT(DC0*DC0 - ONE)
@@ -275,100 +252,96 @@ c
            !A1 = FCU(I) - SIGC(I)
            FMINF2 = FMINF2 + A1**2 !somme de la difference des carres
          ENDDO !LENT   
-         DFUN(4) = (FMINF1 + FMINF2 - FMINC - FMINT) / DFLEX                                     
+         DFUN(4) = (FMINF1 + FMINF2 - FMINC - FMINT) / DFLEX2                                     
       ENDIF !IGOTO
 C----------------------------------------------------------
 C------------------ISYM------------------------
 C----------------------------------------------------------
       ELSE
-      FMINC = ZERO
-      FMINS = ZERO
-      FMINF = ZERO
+        FMINC = ZERO
+        FMINS = ZERO
+        FMINF = ZERO
 
-      EMBC = X(1)
-      EMBT = X(1)
-      FLEX1= X(2)
-      FLEX2= X(2)
-      DEMBC = MAX(EM03 * EMBC, EM10)
-      DFLEX = MAX(EM03 * FLEX1, EM10)
-      NITER= 5
-      DO I=1,8! NFUNC
-       YFAC(I)= UPARAM(8+I)  
-      ENDDO
-      DC0 = ONE+EMBC
-      HC0 = SQRT(DC0*DC0 - ONE)
+        EMBC = X(1)
+        EMBT = X(1)
+        FLEX1= X(2)
+        FLEX2= X(2)
+        DEMBC = MAX(EM03 * EMBC, EM10)
+        DFLEX = MAX(EM03 * FLEX1, EM10)
+        NITER= 5
+        DC0 = ONE+EMBC
+        HC0 = SQRT(DC0*DC0 - ONE)
 
-      DT0 = ONE+EMBT 
-      HT0 = SQRT(DT0*DT0 - ONE)
-      ! IL FAUT PRENDRE LA LONGUEUR DE LA FONCTION CR  EE
-      PN1 = NPC(IFUNC(7))
-      PN2 = NPC(IFUNC(7)+1)
-      SIZEPN = HALF*(PN2 - PN1) ! 
+        DT0 = ONE+EMBT 
+        HT0 = SQRT(DT0*DT0 - ONE)
+        ! IL FAUT PRENDRE LA LONGUEUR DE LA FONCTION CRÉEE
+        PN1 = NPC(IFUNC(7))
+        PN2 = NPC(IFUNC(7)+1)
+        SIZEPN = HALF*(PN2 - PN1) ! 
 
 
-      ! TRANSFORMER CONTRAINTE DEF TISSU EN FORCE DEP FIBRE
-      CALL FCT_FIBER(NPC,PLD ,IFUNC(7),SIZEPN,DC0,HC0,XFIB,YFIB)
+        ! TRANSFORMER CONTRAINTE DEF TISSU EN FORCE DEP FIBRE
+        CALL FCT_FIBER(NPC,PLD ,IFUNC(7),SIZEPN,DC0,HC0,XFIB,YFIB)
 
-      ! STOP
+        ! STOP
 
-      DO I = 1,SIZEPN
-       II = 2*(I-1)
-       ! for each x(i) we have sigc(i) and sigt(i) as response        
-       EC(I) = PLD(NPC(IFUNC(1))+ II )
-       FCU(I)= PLD(NPC(IFUNC(1))+ II+1 )*YFAC(1)
+        DO I = 1,SIZEPN
+         II = 2*(I-1)
+         ! for each x(i) we have sigc(i) and sigt(i) as response        
+         EC(I) = PLD(NPC(IFUNC(1))+ II )
+         FCU(I)= PLD(NPC(IFUNC(1))+ II+1 )*YFAC(1)
 
-        CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
-     .                  YFAC(1),FLEX1,EMBC,SIGC(I)) !SIGC = SIGMA CALCULATED
-        A1 = (FCU(I) - SIGC(I))/MAX(EM20,FCU(I))
-        FMINC = FMINC + A1**2   !somme de la difference des carres
-      ENDDO
-      !STOP
-      IF (IGOTO == 5 .or. IGOTO == 8) FUN =  FMINC                                      
+          CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
+     .                    YFAC(1),FLEX1,EMBC,SIGC(I)) !SIGC = SIGMA CALCULATED
+          A1 = ONE - SIGC(I) / MAX(EM20,FCU(I))
+          FMINC = FMINC + A1**2   !somme de la difference des carres
+        ENDDO
+        !STOP
+        IF (IGOTO == 5 .or. IGOTO == 8) FUN =  FMINC                                    
 C----------------------------------------------------------
-c     DERIVATIVES
+c       DERIVATIVES
 C----------------------------------------------------------
-      !Deriv over stretch ( a voir si besoin de recalculer fonctions fibres)
-      IF (IGOTO == 3 .or. IGOTO == 8) THEN
-         EMBCP  = X(1) + DEMBC 
-         FLEX1  = X(2)
-         DC0 = ONE + EMBCP
-         HC0 = SQRT(DC0*DC0 - ONE)
-         DT0 = DC0
-         HT0 = HC0  
-         DO I = 1,SIZEPN
-           II = 2*(I-1)
-           EC(I) = PLD(NPC(IFUNC(1))+ II )
-           FCU(I)= PLD(NPC(IFUNC(1))+ II +1)*YFAC(1)
-           CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
-     .                     YFAC(1),FLEX1,EMBCP,SIGC(I))
-           A1 = (FCU(I) - SIGC(I))/MAX(EM20,FCU(I))
-           FMINS = FMINS + A1**2 !somme de la difference des carres
-         ENDDO  !SIZEPN    
-c        FMINS   = SQRT(FMINS)                                        
-         DFUN(1) = (FMINS - FMINC) / DEMBC      
+        !Deriv over stretch ( a voir si besoin de recalculer fonctions fibres)
+        IF (IGOTO == 3 .or. IGOTO == 8) THEN
+           EMBCP  = X(1) + DEMBC 
+           FLEX1  = X(2)
+           DC0 = ONE + EMBCP
+           HC0 = SQRT(DC0*DC0 - ONE)
+           DT0 = DC0
+           HT0 = HC0  
+           DO I = 1,SIZEPN
+             II = 2*(I-1)
+             EC(I) = PLD(NPC(IFUNC(1))+ II )
+             FCU(I)= PLD(NPC(IFUNC(1))+ II +1)*YFAC(1)
+             CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
+     .                       YFAC(1),FLEX1,EMBCP,SIGC(I))
+             A1 = ONE - SIGC(I) / MAX(EM20,FCU(I))
+             FMINS = FMINS + A1**2 !somme de la difference des carres
+           ENDDO  !SIZEPN    
+c          FMINS   = SQRT(FMINS)                                        
+           DFUN(1) = (FMINS - FMINC) / DEMBC      
 C----------------------------------------------------------
-        ! Deriv over flex                          
-         EMBC  = X(1)
-         FLEXP = X(2) + DFLEX
-         DC0 = ONE + EMBC
-         HC0 = SQRT(DC0*DC0 - ONE)
-         DT0 = DC0
-         HT0 = HC0  
-         DO I = 1,SIZEPN
-           II = 2*(I-1)
-           EC(I) = PLD(NPC(IFUNC(1))+ II )
-           FCU(I)= PLD(NPC(IFUNC(1))+ II +1)*YFAC(1)
-           CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
-     .                     YFAC(1),FLEXP,EMBC,SIGC(I))
+          ! Deriv over flex                          
+           EMBC  = X(1)
+           FLEXP = X(2) + DFLEX
+           DC0 = ONE + EMBC
+           HC0 = SQRT(DC0*DC0 - ONE)
+           DT0 = DC0
+           HT0 = HC0  
+           DO I = 1,SIZEPN
+             II = 2*(I-1)
+             EC(I) = PLD(NPC(IFUNC(1))+ II )
+             FCU(I)= PLD(NPC(IFUNC(1))+ II +1)*YFAC(1)
+             CALL  CALC_UNIAX(EC(I),XFIB,YFIB,SIZEPN,DC0,HC0,
+     .                       YFAC(1),FLEXP,EMBC,SIGC(I))
 c
-           A1 = (FCU(I) - SIGC(I))/MAX(EM20,FCU(I))
-           !A1 = FCU(I) - SIGC(I)
-           FMINF = FMINF + A1**2 !somme de la difference des carres
-         ENDDO !SIZEPN                                                 
-c        FMINF   = SQRT(FMINF)                                        
-         DFUN(2) = (FMINF - FMINC) / DFLEX                                     
+             A1 = ONE - SIGC(I) / MAX(EM20,FCU(I))
+             FMINF = FMINF + A1**2 !somme de la difference des carres
+           ENDDO !SIZEPN                                                 
+c          FMINF   = SQRT(FMINF)                                        
+           DFUN(2) = (FMINF - FMINC) / DFLEX                                   
 C----------------------------------------------------------
-      ENDIF !IGOTO
+        ENDIF !IGOTO
       ENDIF !ISYM
 C----------------------------------------------------------
       !write(*,'(A,3G20.13)')'FUN , DF1,DF2 ', FUN,DFUN(1),DFUN(2)
@@ -489,9 +462,9 @@ C
         DO 100 I=2,NPT
         DX1 = -DX2
         DX2 = XC(I) - XX
-        IF(DX2>=0.0.OR.I==NPT)THEN
+        IF(DX2.GE.0.0.OR.I.EQ.NPT)THEN
           DERI = (YC(I) - YC(I-1)) / (XC(I) - XC(I-1))
-          IF(DX1<=DX2)THEN
+          IF(DX1.LE.DX2)THEN
             FINTER58 = YC(I-1) + DX1 * DERI
           ELSE
             FINTER58 = YC(I) - DX2 * DERI
@@ -512,7 +485,7 @@ Chd|  FCT_FIBER_2                   source/materials/mat/mat098/lossfun_98.F
 Chd|-- called by -----------
 Chd|        LOSSFUN_98                    source/materials/mat/mat098/lossfun_98.F
 Chd|-- calls ---------------
-Chd|        FINTER                        source/tools/curve/finter.F   
+Chd|        FINTER                        src/mater1/finter.F           
 Chd|        MESSAGE_MOD                   share/message_module/message_mod.F
 Chd|        TABLE_MOD                     share/modules1/table_mod.F    
 Chd|====================================================================

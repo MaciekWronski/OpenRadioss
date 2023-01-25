@@ -937,6 +937,13 @@ c-------
      .           UNITAB   ,MAT_ID    ,TITR     ,MTAG    ,LSUBMODEL,
      .           PM(1,I)  ,IPM(1,I)  )
 c-------
+          CASE ('LAW98','ANI_FAB')
+            ILAW  = 98  
+            CALL HM_READ_MAT98(
+     .           UPARAM   ,MATPARAM ,MAXUPARAM,NUPARAM  ,NUVAR    ,
+     .           MAXTABL  ,NUMTABL  ,ITABLE   ,MTAG     ,PARMAT   ,
+     .           PM(1,I)  ,UNITAB   ,LSUBMODEL,MAT_ID   ,TITR     )
+c-------
           CASE ('LAW100','MNF')
             ILAW  = 100  
             CALL HM_READ_MAT100(

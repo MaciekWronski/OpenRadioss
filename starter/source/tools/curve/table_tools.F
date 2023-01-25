@@ -662,3 +662,218 @@ C-----
 
       RETURN
       END SUBROUTINE TABLE_VINTERP
+
+Chd|====================================================================
+Chd|  TABLE_INTERP1                  source/tools/curve/table_tools.F
+Chd|-- called by -----------
+Chd|        GET_U_TABLE                   source/user_interface/utable.F
+Chd|-- calls ---------------
+Chd|        ARRET                         source/system/arret.F         
+Chd|        TABLE_MOD                     share/modules1/table_mod.F    
+Chd|====================================================================
+      SUBROUTINE TABLE_INTERP1(TABLE,NDIM,XX,YY)
+C-----------------------------------------------
+      USE TABLE_MOD
+C-----------------------------------------------
+C   I m p l i c i t   T y p e s
+C-----------------------------------------------
+#include      "implicit_f.inc"
+C-----------------------------------------------
+C   C o m m o n   B l o c k s
+C-----------------------------------------------
+#include      "com01_c.inc"
+#include      "com04_c.inc"
+#include      "scr05_c.inc"
+#include      "units_c.inc"
+C-----------------------------------------------
+C   D u m m y   A r g u m e n t s
+C-----------------------------------------------
+      INTEGER NDIM
+      TYPE(TTABLE) TABLE
+      my_real ,DIMENSION(NDIM) :: XX
+      my_real :: YY
+C-----------------------------------------------
+C   L o c a l   V a r i a b l e s
+C-----------------------------------------------
+      TYPE(TTABLE_XY), POINTER :: TY
+      INTEGER K, NXK(4), I, IPOS(4), IB(2,2,2,2), 
+     .        IP,IN,IM,IL,P,N,M,L,N1,N12,N123
+      my_real 
+     .       DX1,DX2,R(4),UNR(4)
+C-----------------------------------------------
+      IF( NDIM < TABLE%NDIM )THEN
+        WRITE(IOUT,*) ' ** INTERNAL ERROR - TABLE INTERPOLATION'
+        WRITE(ISTDO,*)' ** INTERNAL ERROR - TABLE INTERPOLATION'
+        CALL ARRET(2)
+      END IF
+C-----
+      DO K=1,NDIM
+
+        NXK(K)=SIZE(TABLE%X(K)%VALUES)
+        DO I=2,NXK(K)
+         DX2 = TABLE%X(K)%VALUES(I) - XX(K)
+         IF(DX2>=ZERO.OR.I==NXK(K))THEN
+           IPOS(K)=I-1
+           R(K)   =(TABLE%X(K)%VALUES(I)-XX(K))/
+     .             (TABLE%X(K)%VALUES(I)-TABLE%X(K)%VALUES(I-1))
+           EXIT
+         ENDIF
+        END DO
+
+      END DO
+C-----
+      TY=>TABLE%Y
+      SELECT CASE(NDIM)
+
+       CASE(4)
+
+        N1  =NXK(1)
+        N12 =NXK(1)*NXK(2)
+        N123=N12   *NXK(3)
+        DO P=0,1
+          IP=N123*(IPOS(4)-1+P)
+          DO N=0,1
+            IN=N12*(IPOS(3)-1+N)
+            DO M=0,1
+              IM=N1*(IPOS(2)-1+M)
+              DO L=0,1
+                IL=IPOS(1)+L
+                IB(L+1,M+1,N+1,P+1)=IP+IN+IM+IL
+              END DO
+            END DO
+          END DO
+        END DO
+C
+        DO K=1,4
+          UNR(K)=ONE-R(K)
+        END DO
+C
+        YY=  R(4)*(   R(3)*(  R(2)*(   R(1)*TY%VALUES(IB(1,1,1,1))
+     .                             +UNR(1)*TY%VALUES(IB(2,1,1,1)))
+     .                     +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,1,1))
+     .                            +UNR(1)*TY%VALUES(IB(2,2,1,1))))
+     .             +UNR(3)*(  R(2)*(   R(1)*TY%VALUES(IB(1,1,2,1))
+     .                             +UNR(1)*TY%VALUES(IB(2,1,2,1)))
+     .                     +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,2,1))
+     .                            +UNR(1)*TY%VALUES(IB(2,2,2,1)))))
+     .    +UNR(4)*(   R(3)*(  R(2)*(   R(1)*TY%VALUES(IB(1,1,1,2))
+     .                             +UNR(1)*TY%VALUES(IB(2,1,1,2)))
+     .                     +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,1,2))
+     .                            +UNR(1)*TY%VALUES(IB(2,2,1,2))))
+     .             +UNR(3)*(  R(2)*(   R(1)*TY%VALUES(IB(1,1,2,2))
+     .                             +UNR(1)*TY%VALUES(IB(2,1,2,2)))
+     .                     +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,2,2))
+     .                            +UNR(1)*TY%VALUES(IB(2,2,2,2)))))
+C-----
+       CASE(3)
+
+        N1  =NXK(1)
+        N12 =NXK(1)*NXK(2)
+        DO N=0,1
+          IN=N12*(IPOS(3)-1+N)
+          DO M=0,1
+            IM=N1*(IPOS(2)-1+M)
+            DO L=0,1
+              IL=IPOS(1)+L
+              IB(L+1,M+1,N+1,1)=IN+IM+IL
+            END DO
+          END DO
+        END DO
+C
+        DO K=1,3
+          UNR(K)=ONE-R(K)
+        END DO
+C
+        YY=R(3)  *(   R(2)*(   R(1)*TY%VALUES(IB(1,1,1,1))
+     .                      +UNR(1)*TY%VALUES(IB(2,1,1,1)))
+     .             +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,1,1))
+     .                      +UNR(1)*TY%VALUES(IB(2,2,1,1))))
+     .    +UNR(3)*(   R(2)*(   R(1)*TY%VALUES(IB(1,1,2,1))
+     .                      +UNR(1)*TY%VALUES(IB(2,1,2,1)))
+     .             +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,2,1))
+     .                      +UNR(1)*TY%VALUES(IB(2,2,2,1))))
+C-----
+       CASE(2)
+
+        N1  =NXK(1)
+        DO M=0,1
+          IM=N1*(IPOS(2)-1+M)
+          DO L=0,1
+            IL=IPOS(1)+L
+            IB(L+1,M+1,1,1)=IM+IL
+          END DO
+        END DO
+C
+        DO K=1,2
+          UNR(K)=ONE-R(K)
+        END DO
+C
+        YY=(   R(2)*(   R(1)*TY%VALUES(IB(1,1,1,1))
+     .              +UNR(1)*TY%VALUES(IB(2,1,1,1)))
+     .      +UNR(2)*(   R(1)*TY%VALUES(IB(1,2,1,1))
+     .             +UNR(1)*TY%VALUES(IB(2,2,1,1))))
+
+C-----
+       CASE(1)
+
+        DO K=1,2
+          UNR(K)=ONE-R(K)
+        END DO
+C
+        YY=R(1)*TY%VALUES(IPOS(1))
+     .    +UNR(1)*TY%VALUES(IPOS(1)+1)
+
+C-----
+      END SELECT
+
+      RETURN
+      END SUBROUTINE TABLE_INTERP1
+
+
+Chd|====================================================================
+Chd|  TABLE_SLOPE1                  source/tools/curve/table_tools.F
+Chd|-- called by -----------
+Chd|-- calls ---------------
+Chd|        TABLE_MOD                     share/modules1/table_mod.F    
+Chd|====================================================================
+      SUBROUTINE TABLE_SLOPE1(TABLE,SCALE,STIFFMIN,STIFFMAX,STIFFINI,STIFFAVG)
+C-----------------------------------------------
+      USE TABLE_MOD
+C-----------------------------------------------
+C   I m p l i c i t   T y p e s
+C-----------------------------------------------
+#include      "implicit_f.inc"
+C-----------------------------------------------
+C   D u m m y   A r g u m e n t s
+C-----------------------------------------------
+      TYPE(TTABLE) :: TABLE
+      my_real :: SCALE,STIFFMIN,STIFFMAX,STIFFINI,STIFFAVG
+C-----------------------------------------------
+C   L o c a l   V a r i a b l e s
+C-----------------------------------------------
+      INTEGER :: I,J,NPOINT,NDIM
+      my_real :: DX,DY,DYDX
+c=======================================================================
+      NDIM = TABLE%NDIM
+      NPOINT = SIZE(TABLE%Y%VALUES)
+c-----
+      DX = TABLE%X(1)%VALUES(2) - TABLE%X(1)%VALUES(1)
+      DY = TABLE%Y%VALUES(2)    - TABLE%Y%VALUES(1)
+      STIFFINI = SCALE * DY/DX
+      STIFFAVG = STIFFINI
+      STIFFMAX = STIFFINI
+      STIFFMIN = STIFFINI
+c-----
+      DO I=3,NPOINT
+        J = I-1
+        DX = TABLE%X(1)%VALUES(I) - TABLE%X(1)%VALUES(J)
+        DY = TABLE%Y%VALUES(I)    - TABLE%Y%VALUES(J)
+        DYDX = SCALE * DY/DX
+        STIFFMAX = MAX(STIFFMAX,DYDX)
+        STIFFMIN = MIN(STIFFMIN,DYDX)
+        STIFFAVG = STIFFAVG + DYDX
+      END DO
+      STIFFAVG = STIFFAVG / NPOINT
+c-----------
+      RETURN
+      END SUBROUTINE TABLE_SLOPE1
