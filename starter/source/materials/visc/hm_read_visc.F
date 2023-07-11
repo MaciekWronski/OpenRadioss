@@ -38,13 +38,14 @@ Chd|        SUBMODEL_MOD                  share/modules1/submodel_mod.F
 Chd|        TABLE_MOD                     share/modules1/table_mod.F    
 Chd|====================================================================
       SUBROUTINE HM_READ_VISC(
-     .           VISC_TAG ,IPM      ,PM         ,BUFMAT   ,BUFLEN   ,
+     .           MAT_PARAM   ,VISC_TAG ,IPM      ,PM         ,BUFMAT   ,BUFLEN   ,
      .           IADBUF   ,UNITAB   ,LSUBMODEL  ,TABLE    )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
       USE UNITAB_MOD
       USE ELBUFTAG_MOD            
+      USE MATPARAM_DEF_MOD
       USE MESSAGE_MOD           
       USE SUBMODEL_MOD
       USE HM_OPTION_READ_MOD
@@ -74,6 +75,7 @@ C-----------------------------------------------
       TYPE(VISC_TAG_) ,DIMENSION(0:MAXVISC) ,INTENT(INOUT) :: VISC_TAG
       TYPE(SUBMODEL_DATA) ,DIMENSION(*)     ,INTENT(IN)    :: LSUBMODEL
       TYPE(TTABLE) TABLE(NTABLE)
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -173,20 +175,24 @@ c--------------------------------------------
             WRITE(IOUT,1000) TRIM(KEY),MAT_ID
 c
 c-----------------------------
-c--------------------------------------------      
             SELECT CASE (IVISC)
-c--------------------------------------------      
+c-----------------------------
             CASE (1)     
-              CALL HM_READ_VISC_PRONY( UPARAM ,MAXPARAM, NUPARAM, 
-     .                                 NUVAR  ,IFUNC   , MAXFUNC,
-     .                                 NFUNC  ,UNITAB  , LSUBMODEL,
-     .                                 TABLE  ,MAT_ID  )
+c           ------------
+              CALL HM_READ_VISC_PRONY(
+     .             MAT_PARAM(IMAT), UPARAM ,MAXPARAM, NUPARAM, 
+     .             NUVAR  ,IFUNC   , MAXFUNC,
+     .             NFUNC  ,UNITAB  , LSUBMODEL,
+     .             TABLE  ,MAT_ID  )
+
               IF (IPM(216 ,I) > 0) THEN
                IPM(216  ,I) = 3
               ELSE
                IPM(216  ,I) = 1
               END IF
+c           ------------
             CASE (2) 
+c           ------------
                CALL HM_READ_VISC_LPRONY( UPARAM ,MAXPARAM, NUPARAM, 
      .                                   NUVAR  ,UNITAB  ,LSUBMODEL,
      .                                   MAT_ID  )
@@ -195,8 +201,11 @@ c--------------------------------------------
               ELSE
                IPM(216  ,I) = 1
               END IF
+c           ------------
             CASE DEFAULT
+c           ------------
               IVISC = 0        
+
             END SELECT
 c-------------------------
             MTN = INT(PM(19,I))      
