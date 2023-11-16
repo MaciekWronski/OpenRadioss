@@ -44,7 +44,7 @@ Chd|====================================================================
       SUBROUTINE ECRIT(PARTSAV    ,MS        ,V        ,IN       ,R          ,
      2                 DMAS       ,WEIGHT    ,ENINTOT  ,EKINTOT  ,
      3                 A          ,AR        ,FXBIPM   ,FXBRPM   ,MONVOL     ,
-     4                 XMOM_SMS   ,SENSORS   ,QFRICINT ,IPARI    ,WEIGHT_MD  ,
+     4                 XMOM_SMS   ,QFRICINT  ,IPARI    ,WEIGHT_MD  ,
      5                 TFEXTH     ,IFLAG     ,MS_2D    ,MULTI_FVM,MAS_ND     ,
      6                 KEND       ,H3D_DATA  ,DYNAIN_DATA,USREINT,OUTPUT)
 C-----------------------------------------------
@@ -54,7 +54,6 @@ C-----------------------------------------------
       USE MESSAGE_MOD
       USE MULTI_FVM_MOD
       USE H3D_MOD
-      USE SENSOR_MOD
       USE ANIM_MOD
       USE STATE_MOD
       USE OUTPUT_MOD
@@ -102,7 +101,6 @@ C-----------------------------------------------
       my_real, INTENT(IN) :: USREINT
       TYPE(MULTI_FVM_STRUCT), INTENT(IN) :: MULTI_FVM
       TYPE(H3D_DATABASE), INTENT(INOUT)  :: H3D_DATA
-      TYPE (SENSORS_)    ,INTENT(IN)     :: SENSORS
       TYPE (DYNAIN_DATABASE), INTENT(INOUT) :: DYNAIN_DATA
       TYPE(OUTPUT_), INTENT(INOUT) :: OUTPUT !< output structure
 C-----------------------------------------------
@@ -503,51 +501,6 @@ c
         ENINTOT = ENINT
         EKINTOT = ENCIN
 C-----------------------------------------------
-C       /STATE/LSENSOR
-C-----------------------------------------------
-        IF (SENSORS%NSTAT  > 0) THEN
-          MSTATT = 0
-          DO I=1,SENSORS%NSTAT
-             ISENS = SENSORS%STAT(I)
-             TS = SENSORS%SENSOR_TAB(ISENS)%TSTART    
-             IF (TT >= TS) THEN
-               MSTAT(I) = MSTAT(I)+1    
-             ENDIF
-             IF (MSTAT(I)==1) MSTATT=1
-          ENDDO
-        ENDIF
-C-----------------------------------------------
-C       /OUTP/LSENSOR
-C-----------------------------------------------
-        IF (SENSORS%NOUTP > 0) THEN
-          MOUTPT = 0
-          DO I=1,SENSORS%NOUTP
-             ISENS = SENSORS%OUTP(I)
-             TS = SENSORS%SENSOR_TAB(ISENS)%TSTART    
-             IF (TT >= TS) THEN
-                MOUTP(I) = MOUTP(I)+1    
-             ENDIF
-             IF(MOUTP(I)==1)  MOUTPT=1
-          ENDDO
-        ENDIF
-C-----------------------------------------------
-C       /STOP/LSENSOR
-C-----------------------------------------------
-        IF (SENSORS%NSTOP > 0) THEN
-          DO I=1,SENSORS%NSTOP
-            ISENS = SENSORS%STOP(I)
-            IF (SENSORS%SENSOR_TAB(ISENS)%STATUS == 1) THEN
-              CALL ANCMSG(MSGID=234,ANMODE=ANINFO,
-     .                    I1 = SENSORS%SENSOR_TAB(ISENS)%SENS_ID)
-              IWARN = IWARN+1
-              MSTOP = 1
-              MREST = 1
-              IPRI  = 0
-              IF (NSANIM/=0) MDESS = 1
-            ENDIF
-          ENDDO
-        ENDIF
-C
         IF((NERR_POSIT==0.AND.ABS(ERR)>DEMXK).OR.
      .     (NERR_POSIT==1.AND.ERR>DEMXK))THEN
           CALL ANCMSG(MSGID=205,ANMODE=ANINFO)

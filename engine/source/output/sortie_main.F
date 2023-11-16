@@ -339,7 +339,7 @@ c
         CALL ECRIT(PARTSAV  ,MS      ,VMCDN  ,IN       ,VR     , 
      2             DMAS     ,WEIGHT  ,ENINTOT  ,EKINTOT,
      3             A        ,AR      ,FXBIPM ,FXBRPM   ,MONVOL ,
-     4             XMOM_SMS ,SENSORS ,QFRICINT ,IPARI  ,
+     4             XMOM_SMS ,QFRICINT ,IPARI  ,
      5             WEIGHT_MD,TFEXTH ,IFLAG   ,MS_2D, MULTI_FVM ,
      6             MAS_ND   ,KEND   ,H3D_DATA,DYNAIN_DATA,USER_WINDOWS%USREINT,OUTPUT)
         DEALLOCATE(VMCDN)
@@ -348,16 +348,10 @@ c
         CALL ECRIT(PARTSAV  ,MS      ,V      ,IN       ,VR     , 
      2             DMAS     ,WEIGHT  ,ENINTOT  ,EKINTOT,
      3             A        ,AR      ,FXBIPM ,FXBRPM   ,MONVOL ,
-     4             XMOM_SMS ,SENSORS ,QFRICINT ,IPARI  ,
+     4             XMOM_SMS ,QFRICINT ,IPARI  ,
      5             WEIGHT_MD,TFEXTH  ,IFLAG  ,MS_2D, MULTI_FVM ,
      6             BID      ,BID     ,H3D_DATA,DYNAIN_DATA,USER_WINDOWS%USREINT,OUTPUT)
       ENDIF
-C-----------------------
-C     SAVE TOTAL INTERNAL AND KINETIC ENERGY FOR ENERGY SENSOR 
-C-----------------------
-c
-      CALL SENSOR_ENERGY_TOTAL(SENSORS ,ENINTOT  ,EKINTOT)  
-c
 C---------------------------------------
 C       CALCUL DU FLUX ET DE LA ROTATION
 C---------------------------------------

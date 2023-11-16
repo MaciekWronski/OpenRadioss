@@ -174,7 +174,7 @@ c--------------------------------------------------
       NPARIS = 4
       NPARRS = 8
       IF (ISELECT == 2) THEN
-        NVAR = 10   ! additional terms to save total system internal and linetic energy
+        NVAR = 9   ! additional term to save total system kinetic energy
       ELSE
         NVAR = 8
       END IF

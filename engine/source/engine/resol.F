@@ -6567,6 +6567,11 @@ c
      .                   GAUGE     ,IGAUP   ,NGAUP    ,PARTSAV2,NSENSOR )
           ENDIF      
 c
+          CALL SENSOR_KIN_ENERGY(
+     .         NUMNOD   ,NSENSOR  ,SENSORS%SENSOR_TAB  ,ENCIN    ,MS       ,
+     .         V        ,A        ,WEIGHT     ,DT1     ,IPARIT   ,
+     .         NSPMD    )
+c
           ! check activation condition of base sensors
           CALL SENSOR_BASE(SENSORS  ,NSENSOR   ,TT        ,DT2       ,
      .         XSENS     ,IPARI     ,PARTSAV2  ,GAUGE     ,FSAV      ,
@@ -6575,7 +6580,12 @@ c
 c
           ! check activation condition of logical sensors hierarchy
           CALL SENSOR_LOGICAL(NSENSOR,SENSORS%SENSOR_TAB)
-
+c
+          CALL SENSOR_OUTPUT(SENSORS,ISPMD,
+     .         MX_OUTP2 ,MX_STAT2 ,MSTATT,MOUTPT,
+     .         IWARN,MSTOP,MREST,NSANIM,MDESS,
+     .         MSTAT,MOUTP)       
+c
         ENDIF
 
         GOTO 111
@@ -7868,6 +7878,11 @@ c
      .                 XSENS     ,X       ,ACCELM   ,IACCP     ,NACCP     ,
      .                 GAUGE     ,IGAUP   ,NGAUP    ,PARTSAV2  ,NSENSOR   ) 
         ENDIF
+c
+        CALL SENSOR_KIN_ENERGY(
+     .           NUMNOD   ,NSENSOR  ,SENSORS%SENSOR_TAB  ,ENCIN    ,MS       ,
+     .           V        ,A        ,WEIGHT     ,DT1     ,IPARIT   ,
+     .           NSPMD    )
 c       
         ! check activation condition of base sensors
         CALL SENSOR_BASE(SENSORS  ,NSENSOR   ,TT        ,DT2       ,
@@ -7877,7 +7892,13 @@ c
 c       
         ! check activation condition of logical sensor hierarchy
         CALL SENSOR_LOGICAL(NSENSOR,SENSORS%SENSOR_TAB)
-
+        
+c        
+        CALL SENSOR_OUTPUT(SENSORS,ISPMD,
+     .       MX_OUTP2 ,MX_STAT2 ,MSTATT,MOUTPT,
+     .       IWARN,MSTOP,MREST,NSANIM,MDESS,
+     .       MSTAT,MOUTP)       
+c
       ENDIF  !  NSENSOR > 0
 C========================================================================================
 

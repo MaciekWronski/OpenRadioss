@@ -71,16 +71,15 @@ C----------------------------------------------------------
      .   AVG_EI,AVG_EK,ALPHAI,ALPHAK,INFINITY
       PARAMETER (INFINITY = 1.0E20)
 c----------------------------------------------------------
-c    SENSOR%VAR(1)   = TCRIT1 
-c    SENSOR%VAR(2)   = TSTART1
-c    SENSOR%VAR(3)   = TCRIT2 
-c    SENSOR%VAR(4)   = TSTART2
-c    SENSOR%VAR(5)   = Mean  EI
-c    SENSOR%VAR(6)   = Mean  EK
-c    SENSOR%VAR(7)   = Alphai
-c    SENSOR%VAR(8)   = Alphak
-c    SENSOR%VAR(9)   = current total internal energy
-c    SENSOR%VAR(10)  = current total kinetic energy
+c    SENSOR%VAR(1)  = TCRIT1 
+c    SENSOR%VAR(2)  = TSTART1
+c    SENSOR%VAR(3)  = TCRIT2 
+c    SENSOR%VAR(4)  = TSTART2
+c    SENSOR%VAR(5)  = Mean  EI
+c    SENSOR%VAR(6)  = Mean  EK
+c    SENSOR%VAR(7)  = Alphai
+c    SENSOR%VAR(8)  = Alphak
+c    SENSOR%VAR(9)  = current total kinetic energy
 C=======================================================================
       IF (SENSOR%STATUS == 1) RETURN   ! already activated
 c
@@ -110,11 +109,9 @@ c
       IFLAG  = 0
 c---------------------------------------------------------
 c     Fetch current energy values
-c---------------------------------------------------------
-      
+c---------------------------------------------------------      
       IF (ISELECT == 2) THEN  ! total system energy
-        EINT = SENSOR%VAR(9)
-        EKIN = SENSOR%VAR(10)
+        EKIN = SENSOR%VAR(9)
       ELSE                    ! PART / SUBSET energy
         IF (IPARIT > 0) THEN
           EINT = ZERO
@@ -136,26 +133,38 @@ c---------------------------------------------------------
      .      SENSOR_STRUCT(ISENS)%FBSAV6_SENS(2,1,1) + SENSOR_STRUCT(ISENS)%FBSAV6_SENS(2,J,1)
           ENDDO 
           EINT = SENSOR_STRUCT(ISENS)%FBSAV6_SENS(1,1,1)
-          EKIN = SENSOR_STRUCT(ISENS)%FBSAV6_SENS(2,1,1)
-      
+          IF (ISELECT == 2) THEN  ! total system energy
+            EKIN = SENSOR%VAR(9)
+          ELSE
+            EKIN = SENSOR_STRUCT(ISENS)%FBSAV6_SENS(2,1,1)
+          END IF
           DO ITSK=1,NTHREAD
             DO J=1,6
               SENSOR_STRUCT(ISENS)%FBSAV6_SENS(1,J,ITSK) = ZERO    
               SENSOR_STRUCT(ISENS)%FBSAV6_SENS(2,J,ITSK) = ZERO        
             ENDDO
           ENDDO
+      
         ELSE    ! PARTTH/OFF
           EINT = ZERO
           EKIN = ZERO
           IF (IPART > 0) THEN
             EINT = PARTSAV2(1,IPART)
-            EKIN = PARTSAV2(2,IPART)
+            IF (ISELECT == 2) THEN  ! total system energy
+              EKIN = SENSOR%VAR(9)
+            ELSE
+              EKIN = PARTSAV2(2,IPART)
+            END IF
           ELSEIF (ISUBS > 0) THEN
             NP = SUBSET(ISUBS)%NTPART
             DO J=1,NP
               IPART= SUBSET(ISUBS)%TPART(J)
               EINT = EINT + PARTSAV2(1,IPART)
-              EKIN = EKIN + PARTSAV2(2,IPART)
+              IF (ISELECT == 2) THEN  ! total system energy
+                EKIN = SENSOR%VAR(9)
+              ELSE
+                EKIN = EKIN + PARTSAV2(2,IPART)
+              END IF
             ENDDO
           ENDIF ! IF (IPART > 0)
         ENDIF
