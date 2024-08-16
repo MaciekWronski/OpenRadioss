@@ -2654,14 +2654,14 @@
 !-----------------------
           if (jsph == 0) then
 !
-            call mqviscb(&
+            call mqviscb(mat_elem%mat_param(imat),       &
             &pm,       off,      rho,      bid1,&
             &el_temp,  ssp,      bid3,     stifn,&
             &dt2t,     neltst,   ityptst,  aire,&
             &offg,     geo,      pid,      voln,&
             &vd2,      deltax,   vis,      d1,&
             &d2,       d3,       pnew,     psh,&
-            &mat,      ngl,      q,        ssp_eq,&
+            &mat(1),   ngl,      q,        ssp_eq,&
             &vol,      mssa,     dmels,    igeo,&
             &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
             &ipm,      rhoref,   rhosp,    nel,&

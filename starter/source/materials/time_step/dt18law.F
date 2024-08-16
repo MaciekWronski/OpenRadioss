@@ -25,10 +25,14 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||--- called by ------------------------------------------------------
       !||    dtmain    ../starter/source/materials/time_step/dtmain.F
       !||====================================================================
-      SUBROUTINE DT18LAW(PM,IPM,MAT,EINT,THETA,DELTAX,DTX)
+      SUBROUTINE DT18LAW(MAT_PARAM,PM,IPM,IMAT,EINT,THETA,DELTAX,DTX)
 C
 C     CALCUL DES DT ELEM LOI NO 18 THERMIQUE PURE
 C
+C-----------------------------------------------
+C   M o d u l e s
+C-----------------------------------------------
+      USE MATPARAM_DEF_MOD          
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -45,38 +49,39 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
-      INTEGER IPM(NPROPMI,*),MAT(*)
-C     REAL
-      my_real
-     .   PM(NPROPM,*), EINT(*), THETA(*), DELTAX(*), DTX(*)
+      INTEGER ,INTENT(IN) :: IMAT
+      INTEGER IPM(NPROPMI,*)
+      my_real :: PM(NPROPM,*), EINT(*), THETA(*), DELTAX(*), DTX(*)
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT)  :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I, ITFUN
-C     REAL
-      my_real
-     .   A(MVSIZ), B(MVSIZ), SPH(MVSIZ), T0
+      INTEGER I,ITFUN
+      my_real :: RHOCP, T0, A, B
 C=======================================================================
+      RHOCP= PM(69,IMAT)
+      A    = PM(75,IMAT)
+      B    = PM(76,IMAT)
+      T0   = PM(79,IMAT)
+!
+      RHOCP = MAT_PARAM%THERM%RHOCP
+      T0    = MAT_PARAM%THERM%TREF
+      A     = MAT_PARAM%THERM%AS
+      B     = MAT_PARAM%THERM%BS
+
       DO I=LFT,LLT
-      SPH(I)=PM(69,MAT(I))
-      A(I)  =PM(75,MAT(I))
-      B(I)  =PM(76,MAT(I))
+        THETA(I) = EINT(I)/RHOCP
       END DO
 
       DO I=LFT,LLT
-      THETA(I)=EINT(I)/SPH(I)
+        ITFUN = IPM(11,IMAT)
+        IF(ITFUN/=0)THEN
+          THETA(I) = T0 ! missing function value !
+        ENDIF
       END DO
 
       DO I=LFT,LLT
-      T0=PM(79,MAT(I))
-      ITFUN = IPM(11,MAT(I))
-      IF(ITFUN/=0)THEN
-       THETA(I) = T0 ! missing function value !
-      ENDIF
-      END DO
-
-      DO I=LFT,LLT
-      DTX(I)=HALF*DELTAX(I)**2*SPH(I)/(A(I)+B(I)*THETA(I))
+        DTX(I) = HALF*DELTAX(I)**2*RHOCP/(A+B*THETA(I))
       ENDDO
 C-----------
       RETURN

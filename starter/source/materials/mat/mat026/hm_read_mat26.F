@@ -41,7 +41,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       SUBROUTINE HM_READ_MAT26(
      .              MTAG     ,PM      ,MAT_ID   ,TITR  ,IPM     ,
      .              JTHE     ,BUFMAT  ,MFI      ,IDF   ,LSUBMODEL,
-     .              UNITAB   ,MATPARAM)
+     .              UNITAB   ,MAT_PARAM)
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -73,7 +73,7 @@ C-----------------------------------------------
       TYPE(SUBMODEL_DATA), DIMENSION(NSUBMOD),INTENT(IN) :: LSUBMODEL
       TYPE(MLAW_TAG_), INTENT(INOUT) :: MTAG
       my_real ,DIMENSION(*), INTENT(INOUT) :: BUFMAT
-      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MATPARAM
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -150,6 +150,10 @@ C=======================================================================
       PM(46)= TMELT
       PM(47)= TMAX
       PM(80)= TMELT
+!      
+      MAT_PARAM%RHO         = RHOR
+      MAT_PARAM%RHO0        = RHO0
+      MAT_PARAM%THERM%TMELT = TMELT
 C--------------------------------------
 C     SESAME
 C--------------------------------------
@@ -319,14 +323,14 @@ c
       MTAG%L_Z     = 1    ! taux ionisation
 c
       ! MATPARAM keywords
-      CALL INIT_MAT_KEYWORD(MATPARAM,"INCOMPRESSIBLE")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"INCOMPRESSIBLE")
 
       ! EOS/Thermo keyword for pressure treatment in elements
-      CALL INIT_MAT_KEYWORD(MATPARAM,"HYDRO_EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"HYDRO_EOS")
 
 c
       ! Properties compatibility
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SOLID_ISOTROPIC")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SOLID_ISOTROPIC")
 c-----------
       RETURN
 c-----------       

@@ -30,7 +30,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||--- uses       -----------------------------------------------------
       !||    glob_therm_mod   ../common_source/modules/mat_elem/glob_therm_mod.F90
       !||====================================================================
-      SUBROUTINE SBOLTLAW(
+      SUBROUTINE SBOLTLAW(MAT_PARAM,
      1   PM,      SIG,     MAT,     D1,
      2   D2,      D3,      D4,      D5,
      3   D6,      NEL,     RHO,     BPRELD,
@@ -51,6 +51,7 @@ C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
       use glob_therm_mod
+      USE MATPARAM_DEF_MOD
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -95,11 +96,12 @@ C
      .   MSSA(*), DMELS(*),CONDE(*),AMU(*),VOL_AVG(*),DTEL(*),
      .   RHOREF(*)  ,RHOSP(*) 
       DOUBLE PRECISION VOL0DP(*) 
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
       type (glob_therm_) ,intent(inout) :: glob_therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I, MX,IBID !, J
+      INTEGER I, IMAT,IBID !, J
       my_real
      .   REDUC ,REDUC1 , T1, T2 , EE, NU, GGT, TREPS, P, TP 
       my_real
@@ -123,29 +125,29 @@ C-----------------------------------------------
          REDUC = MIN(REDUC1*(ONE-TP/(T2-T1))+TP/(T2-T1), ONE)
        ENDIF
 C       
-       MX = MAT(I)
-       RHO0_1 = PM(1, MX)      
-       NU = PM(21, MX)
-       EE = PM(20, MX)*REDUC
-       GG(I) = PM(22, MX)*REDUC
-       C1_1  = PM(32, MX)   
+       IMAT = MAT(I)
+       RHO0_1 = PM(1, IMAT)      
+       NU = PM(21, IMAT)
+       EE = PM(20, IMAT)*REDUC
+       GG(I) = PM(22, IMAT)*REDUC
+       C1_1  = PM(32, IMAT)   
        LMBD(I) = DT1*EE*NU/((ONE+NU)*(ONE-TWO*NU))
        C1(I) = C1_1*REDUC 
        RHO0(I) =RHO0_1  
 C
        !SSP(I)=SQRT((ONEP333*GG(I)+C1(I))/RHO0(I))
-       SSP(I)=SQRT((ONEP333*PM(22, MX)+C1_1)/RHO0(I))
+       SSP(I)=SQRT((ONEP333*PM(22, IMAT)+C1_1)/RHO0(I))
       ENDDO
 C
       IF (JSPH==0)THEN
-       CALL MQVISCB(
+       CALL MQVISCB(MAT_PARAM,
      1   PM,      OFF,     RHO,     BID1,
      2   BID2,    SSP,     BID3,    STIFN,
      3   DT2T,    NELTST,  ITYPTST, AIRE,
      4   OFFG,    GEO,     PID,     VNEW,
      5   VD2,     DELTAX,  VIS,     D1,
      6   D2,      D3,      PNEW,    PSH,
-     7   MAT,     NGL,     QNEW,    SSP_EQ,
+     7   MAT(1),  NGL,     QNEW,    SSP_EQ,
      8   VOL0,    MSSA,    DMELS,   IBID,
      9   FACQ0,   CONDE,   DTEL,    G_DT,
      A   IPM,     RHOREF,  RHOSP,   NEL,

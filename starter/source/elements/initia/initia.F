@@ -893,7 +893,7 @@ C
           ISOLNOD = IPARG(28,NG)
           ILEV=IPARG(45,NG)
 C
-          CALL INIVOID(ELBUF_TAB(NG),
+          CALL INIVOID(MAT_PARAM,ELBUF_TAB(NG),
      1        IXC        ,IXS        ,IXTG       ,X         ,V        ,
      2        PM         ,GEO        ,MS         ,IN        ,PTG      ,
      3        MSC        ,MSS        ,MSTG       ,INC       ,INTG     ,
@@ -935,7 +935,8 @@ C
      B        NINDX      ,XREFC      ,XREFTG     ,XREFS     ,MSSA     ,
      C        SH3TRIM    ,ISUBSTACK  ,BUFMAT     ,IPM       ,STACK    ,
      D        RNOISE     ,STRC       ,STRTG      ,PERTURB   ,NEL      ,
-     E        GROUP_PARAM_TAB(NG)    ,IGTYP      ,DEFAULTS  ,GLOB_THERM)
+     E        MAT_PARAM  ,GROUP_PARAM_TAB(NG)    ,IGTYP      ,DEFAULTS,
+     F        GLOB_THERM)
 C
        ELSE
 C Element types
@@ -1093,8 +1094,8 @@ C Case total strain
      .             IUSER      ,NSIGS     ,VOLNOD    ,BVOLNOD     ,VNS        ,
      .             BNS        ,WMA       ,PTSOL     ,BUFMAT      ,MCP        ,
      .             MCPS       ,TEMP      ,NPC       ,PLD         ,MSSA       ,
-     .             STRSGLOB(NF1),STRAGLOB(NF1),ORTHOGLOB ,FAIL_INI    ,ILOADP     ,
-     .             FACLOAD   ,RNOISE     ,PERTURB   ,GLOB_THERM)
+     .             STRSGLOB(NF1),STRAGLOB(NF1),ORTHOGLOB ,FAIL_INI    ,ILOADP,
+     .             FACLOAD   ,RNOISE     ,PERTURB   ,GLOB_THERM  ,MAT_PARAM  )
             ENDIF
           ELSEIF (JHBE == 14 .AND. 
      .           (IGTYP == 20 .OR. IGTYP == 21 .OR. IGTYP == 22)) THEN
@@ -1202,7 +1203,7 @@ C Case total strain
      B              XREFS        ,NPC          ,PLD    ,MSSA       ,STRSGLOB(NF1),
      C              STRAGLOB(NF1),FAIL_INI     ,SPBUF  ,KXSP       ,IPART(I15J),
      D              NOD2SP       ,SOL2SPH      ,IRST   ,ILOADP     ,FACLOAD    , 
-     E              MULTI_FVM, ERROR_THROWN,DETONATORS, MAT_PARAM)
+     E              MULTI_FVM    ,ERROR_THROWN ,DETONATORS,MAT_PARAM)
             ENDIF
            
             CALL SREFSTA3(
@@ -1252,7 +1253,7 @@ C Case total strain: conf_ref <- XREF
      4                NEL   ,SKEW   , MSQ  ,IPART  ,IPART(I15B),
      5                IPM   ,NSIGS  ,WMA   ,PTQUAD ,BUFMAT     ,
      6                NPC   ,PLD    ,IPARG ,ILOADP ,FACLOAD    ,
-     7                PARTSAV,V     )
+     7                PARTSAV,V     ,MAT_PARAM    )
               ELSE
                  CALL QINIT2(
      .                ELBUF_TAB(NG),MS,IXQ   ,PM   ,X       ,
@@ -1261,7 +1262,7 @@ C Case total strain: conf_ref <- XREF
      .                NEL   ,SKEW, MSQ, IPART, IPART(I15B),
      .                IPM     ,NSIGS  ,
      .                WMA     ,PTQUAD ,BUFMAT  ,NPC  ,PLD,
-     .                IPARG   ,ILOADP ,FACLOAD ,PARTSAV,V)
+     .                IPARG   ,ILOADP ,FACLOAD ,PARTSAV,V,MAT_PARAM    )
               ENDIF
            ELSE  ! JMULT > 0
               IF (MTN == 20) THEN
@@ -1359,7 +1360,7 @@ C 2D multifluid law
         !   ITY == 5                        BEAM !
         !----------------------------------------!
         ELSEIF (ITY == 5) THEN
-          CALL PINIT3(ELBUF_TAB(NG),
+          CALL PINIT3(MAT_PARAM  ,ELBUF_TAB(NG),
      1                STP        ,IXP      ,PM      ,X       ,GEO   ,
      2                MS         ,IN       ,DTELEM  ,NFT     ,NEL  ,
      3                STIFN      ,STIFR    ,PARTSAV ,V       ,IPART(I15E),
@@ -1454,7 +1455,7 @@ C         SPH cells
      4             PARTSAV ,V          ,IPART(I15J),BUFMAT,
      5             PM      ,ITAB       ,MSR        ,INR   ,IXSP   ,
      6             NOD2SP  ,IPARG(1,NG),ALE_CONNECTIVITY      ,DETONATORS  ,
-     7             SIGSPH  ,ISPTAG     ,IPART      ,
+     7             SIGSPH  ,ISPTAG     ,IPART      ,MAT_PARAM,
      8             IPM     ,NSIGSPH    ,PTSPH      ,NPC   ,
      9             PLD     ,ELBUF_TAB(NG),MCP,TEMP ,ILOADP,
      A             FACLOAD ,STIFINT    ,I7STIFS,GLOB_THERM)
@@ -1498,7 +1499,7 @@ c
      .             VNIGE  ,BNIGE   ,PTSOL   ,
      .             BUFMAT ,NPC     ,PLD    ,FAIL_INI,NCTRL,
      .             MSIG3D ,KNOT    ,NCTRLMAX,WIGE ,PX,PY,PZ,
-     .             KNOTLOCPC,KNOTLOCEL)
+     .             KNOTLOCPC,KNOTLOCEL,MAT_PARAM)
         ENDIF          
 C
         IF (ITY == 3) THEN

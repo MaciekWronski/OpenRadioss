@@ -764,7 +764,7 @@
           endif
 
           if(iboltp /= 0 .and. ibpreld == 1)then
-            call sboltlaw(&
+            call sboltlaw(mat_elem%mat_param(imat),                 &
             &pm,         lbuf%sig,   mat,        dxx,&
             &dyy,        dzz,        d4,         d5,&
             &d6,         nel,        lbuf%rho,   bpreld,&
@@ -784,7 +784,7 @@
           else if (mtn == 1) then
 !
             if (jhbe==17.and.iint==3.and.ismstr == 1) then
-              call m1lawi(&
+              call m1lawi(mat_elem%mat_param(imat),            &
               &pm,       off,      lbuf%sig, lbuf%eint,&
               &lbuf%rho, lbuf%qvis,lbuf%vol, stifn,&
               &dt2t,     neltst,   ityptst,  lbuf%off,&
@@ -801,7 +801,7 @@
               &jtur,     jthe,     jsph,     ismstr,&
               &jsms,     npg ,     glob_therm)
             else if(ismstr >= 10.and.ismstr <= 12)then
-              call m1lawtot(&
+              call m1lawtot(mat_elem%mat_param(imat),            &
               &pm,         off,        lbuf%sig,   lbuf%eint,&
               &lbuf%rho,   lbuf%qvis,  lbuf%vol,   stifn,&
               &dt2t,       neltst,     ityptst,    lbuf%off,&
@@ -822,7 +822,7 @@
               &jthe,       jcvt,       jsph,       jsms,&
               &npg ,       glob_therm)
             else
-              call m1law(&
+              call m1law(mat_elem%mat_param(imat),            &
               &pm,       off,      lbuf%sig, lbuf%eint,&
               &lbuf%rho, lbuf%qvis,lbuf%vol, stifn,&
               &dt2t,     neltst,   ityptst,  lbuf%off,&
@@ -842,7 +842,7 @@
 !
           elseif (mtn == 2) then
 !
-            call m2law(&
+            call m2law(mat_elem%mat_param(imat),              &
             &pm,       off,      lbuf%sig, lbuf%eint,&
             &lbuf%rho, lbuf%qvis,lbuf%pla, lbuf%epsd,&
             &lbuf%vol, stifn,    dt2t,     neltst,&
@@ -861,7 +861,8 @@
             &nel,      ipm,      rhoref,   rhosp,&
             &ipg,      lbuf%dmg, ity,      jtur,&
             &jthe,     jsph,     ismstr,   jsms,&
-            &lbuf%epsq,npg ,mat_elem%mat_param(imat)%ieos ,dpdm  ,fheat ,glob_therm)
+            &lbuf%epsq,npg ,mat_elem%mat_param(imat)%ieos ,dpdm  , &
+            &fheat ,glob_therm)
 !----------------
             if (istrain > 0 .and.&
             &(h3d_strain == 1 .or. th_strain == 1 )) then
@@ -978,14 +979,14 @@
             &sigy,    defp,    dpla,    nel,&
             &nft)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1023,14 +1024,14 @@
             &epsp,     tstar,    el_temp,  nel   , jthe,   &
             &mat_elem%mat_param(imat)%ieos,fheat )
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1171,14 +1172,14 @@
             &er1v ,er2v     ,wdr1v      ,wdr2v    ,w1        ,&
             &rho0, amu)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1215,14 +1216,14 @@
             &wxx,      wyy,      wzz,      nel,&
             &dpdm,     jtur,     jpor)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1277,14 +1278,14 @@
             &defp       ,pnew     ,psh       ,amu      ,lbuf%seq,&
             &nel        ,dpdm)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      bid1,     bid2,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1347,14 +1348,14 @@
             &ebuf%var,   nvareos,    jcvt,       jsph,&
             &mat_elem%mat_param(imat))
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1391,14 +1392,14 @@
             &ngl,        lbuf%seq,   nel,        lbuf%tsaiwu,&
             &jcvt,       jsph)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1433,14 +1434,14 @@
             &pnew,     p01,      p02,      e01,&
             &e02,      cxx,      dpdm,     nel)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1475,14 +1476,14 @@
             &c3,       c4,       c5,       c6,&
             &df,       dpdm,     jpor)
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1536,14 +1537,14 @@
             &npf      ,sigy    ,defp    ,ipm      ,pnew    ,&
             &psh      ,amu     ,lbuf%seq,nel      )
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      bid1,     bid2,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1573,7 +1574,7 @@
             &nel,      jtur,     jlag,     jpor)
             call eosupda(off  ,lbuf%sig ,lbuf%eint, lbuf%vol ,pnew ,nel)
           elseif (mtn == 22) then
-            call m22law(&
+            call m22law(mat_elem%mat_param(imat),    &
             &pm,       off,      lbuf%sig, lbuf%eint,&
             &lbuf%rho, lbuf%qvis,lbuf%pla, lbuf%epsd,&
             &lbuf%vol, zero,     stifn,    dt2t,&
@@ -1592,7 +1593,7 @@
             &ity,      jtur,     jthe,     ismstr,&
             &jsms,     npg ,     glob_therm)
           elseif (mtn == 23) then
-            call m22law(&
+            call m22law(mat_elem%mat_param(imat),            &
             &pm,       off,      lbuf%sig, lbuf%eint,&
             &lbuf%rho, lbuf%qvis,lbuf%pla, lbuf%epsd,&
             &lbuf%vol, one,      stifn,    dt2t,&
@@ -1611,7 +1612,7 @@
             &ity,      jtur,     jthe,     ismstr,&
             &jsms,     npg ,     glob_therm)
           elseif (mtn == 24) then
-            call m24law(&
+            call m24law(mat_elem%mat_param(imat),            &
             &lbuf,     pm,       off,      lbuf%sig,&
             &lbuf%eint,lbuf%rho, lbuf%qvis,lbuf%vol,&
             &stifn,    dt2t,     neltst,   ityptst,&
@@ -1648,14 +1649,14 @@
             &elbuf_tab(ng)%bufly(ilay)%l_dmg,gbuf%ierr)
 !
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&
@@ -1716,7 +1717,7 @@
             &voln     ,dvol      ,nel, p01)
           elseif (mtn == 46 .or. mtn == 47) then
             nuvar  = ipm(8,imat)
-            call m46law(&
+            call m46law(mat_elem%mat_param(imat),       &
             &lft,      llt,      nft,      mtn,&
             &pm,       off,      lbuf%sig, lbuf%eint,&
             &lbuf%rho, lbuf%qvis,lbuf%vol, mbuf%var,&
@@ -1742,14 +1743,14 @@
             &rho0     ,dpdm     ,sigy    ,defp    ,dpla    ,&
             &espe     ,ecold    ,nel     )
             if (jsph == 0) then
-              call mqviscb(&
+              call mqviscb(mat_elem%mat_param(imat),          &
               &pm,       off,      lbuf%rho, lbuf%rk,&
               &lbuf%temp,cxx,      lbuf%re,  stifn,&
               &dt2t,     neltst,   ityptst,  aire,&
               &lbuf%off, geo,      pid,      voln,&
               &vd2,      deltax,   vis,      dxx,&
               &dyy,      dzz,      pnew,     psh,&
-              &mat,      ngl,      qvis,     ssp_eq,&
+              &mat(1),   ngl,      qvis,     ssp_eq,&
               &lbuf%vol, mssa,     dmels,    igeo,&
               &facq0,    conde,    gbuf%dt,  gbuf%g_dt,&
               &ipm,      rhoref,   rhosp,    nel,&

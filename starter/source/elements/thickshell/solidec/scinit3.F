@@ -55,7 +55,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .                  BNS       ,WMA       ,PTSOL    ,BUFMAT    ,MCP   ,
      .                  MCPS      ,TEMP      ,NPF      ,TF        ,MSSA  ,
      .                  STRSGLOB  ,STRAGLOB ,ORTHOGLOB ,FAIL_INI  ,ILOADP,
-     .                  FACLOAD   ,RNOISE   ,PERTURB   ,GLOB_THERM)
+     .                  FACLOAD   ,RNOISE   ,PERTURB   ,GLOB_THERM,MAT_PARAM )
 C-----------------------------------------------
 C   D e s c r i p t i o n
 C   Initialize 8-nodes thick shell HQEPH, co-rotational formulation
@@ -67,6 +67,7 @@ C-----------------------------------------------
       USE DETONATORS_MOD             
       USE ALE_CONNECTIVITY_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD
       use glob_therm_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
@@ -105,12 +106,13 @@ C-----------------------------------------------
       TYPE(DETONATORS_STRUCT_)::DETONATORS
       TYPE(t_ale_connectivity), INTENT(INOUT) :: ALE_CONNECTIVITY
       type (glob_therm_) ,intent(in)      :: glob_therm
+      TYPE (MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER NF1, IBID, I, NLAY,IGTYP,NLYMAX,IS,NUVAR,IREP,NCC,JHBE,
      .        IDEF, IP, IPANG, IPTHK, IPPOS, IPMAT,IG,IM,MTN0,IPID1,
-     .        NPTR,NPTS,NPTT,L_PLA,L_SIGB
+     .        NPTR,NPTS,NPTT,L_PLA,L_SIGB,IMAT
       INTEGER IX1(MVSIZ), IX2(MVSIZ), IX3(MVSIZ), IX4(MVSIZ),
      .        IX5(MVSIZ), IX6(MVSIZ), IX7(MVSIZ), IX8(MVSIZ)
       INTEGER  MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ) , MAT0(MVSIZ)
@@ -215,6 +217,7 @@ C
       IREP   = IPARG(35)
       IGTYP  = IPARG(38)
       JHBE   = IPARG(23)
+      IMAT  = IXS(1,NFT+1)
       NF1=NFT+1
       IF (JCVT==1.AND.ISORTH/=0) JCVT=2
       IF (IGTYP /= 22) ISORTH = 0
@@ -222,8 +225,8 @@ C
       IDEF   = 0
 C
       DO I=1,NEL
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) = MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
       CALL SCCOOR3(X ,IXS(1,NF1),GEO  ,MAT  ,PID  ,NGL  ,
      .         IX1  ,IX2  ,IX3  ,IX4  ,IX5  ,IX6  ,IX7  ,IX8 ,
@@ -290,7 +293,10 @@ C
       IF (IGTYP == 22) CALL SCZERO3(GBUF%RHO,GBUF%SIG,GBUF%EINT,NEL)
 C----------------------------------------
 C Thermal initialization
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE /= 0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C------------------------
 C Loop on integration points
       DO IS=1,NLAY
@@ -367,7 +373,7 @@ C
           AIRE(:) = ZERO
           CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .         LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .         VOLU, DTX , IGEO ,IGTYP)
+     .         VOLU, DTX , IGEO ,IGTYP,MAT_PARAM(IMAT))
 C Average density, stresses, ...
           CALL SVALUE0(
      .         LBUF%RHO,LBUF%VOL,LBUF%OFF,LBUF%SIG,LBUF%EINT,DTX,        
@@ -412,7 +418,7 @@ C Element time step
        AIRE(:) = ZERO
        CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .      LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .      VOLU, DTX , IGEO ,IGTYP)
+     .      VOLU, DTX , IGEO ,IGTYP,MAT_PARAM(IMAT))
 C
        IF(IGTYP == 22) THEN
         DO I=1,NEL

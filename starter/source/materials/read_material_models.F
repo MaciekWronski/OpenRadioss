@@ -115,7 +115,6 @@ C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER ::  I,J,K,N,IADBUF,ILAW
       LOGICAL IS_ENCRYPTED, IS_AVAILABLE
-      my_real ::  T0,SPH,AS,BS,T1,AL,BL
       INTEGER IFUNC(MAXFUNC)
       CHARACTER MESS*40
 C-----------------------------------------------

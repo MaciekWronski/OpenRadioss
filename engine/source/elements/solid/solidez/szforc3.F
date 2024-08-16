@@ -1093,7 +1093,7 @@ C Finite element heat transfert
         IMAT = MXT(1)
         IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
           CALL STHERM(
-     1         PM,      IMAT,    VOLN,    NC1,
+     1         MAT_ELEM%mat_param(imat)%therm,    VOLN,    NC1,
      2         NC2,     NC3,     NC4,     NC5,
      3         NC6,     NC7,     NC8,     PX1,
      4         PX2,     PX3,     PX4,     PY1,
@@ -1104,7 +1104,7 @@ C Finite element heat transfert
      9         GBUF%VOL,NEL     ,NUMNOD ,GLOB_THERM%THEACCFACT)
          ELSE
           CALL STHERM(
-     1         PM,      IMAT,    VOLN,    NC1,
+     1         MAT_ELEM%mat_param(imat)%therm,    VOLN,    NC1,
      2         NC2,     NC3,     NC4,     NC5,
      3         NC6,     NC7,     NC8,     PX1,
      4         PX2,     PX3,     PX4,     PY1,

@@ -245,6 +245,7 @@ C--------------------------------
        my_real , DIMENSION (NEL) :: ZOFFSET
 !     variables for heat transfer
       my_real, dimension(mvsiz) :: fheat
+      my_real :: TMU,RPR
 !
 C--- Variables pour le non-local
       INTEGER :: NDDL, K, INOD(4),NC1(MVSIZ), NC2(MVSIZ), NC3(MVSIZ), NC4(MVSIZ),
@@ -712,25 +713,30 @@ c-------------------------------
 C-------------------------
 c     Thermique des coques 
 C--------------------------
-        IF (JTHE /= 0) THEN  
-          IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
-            CALL THERMC(JFT    ,JLT     ,PM      ,MAT  ,THK0 ,IXC  ,
-     .                  Y24    ,PX2     ,PY1     ,PY2  ,AREA ,DT1C ,
-     .                  TEMP   ,TEMPEL  ,FHEAT   ,THEM ,GLOB_THERM%THEACCFACT)
-          ELSE
-            CALL THERMC(JFT    ,JLT     ,PM      ,MAT  ,THK0 ,IXC  ,
-     .                  Y24    ,PX2     ,PY1     ,PY2  ,AREA ,DT1C ,
-     .                  TEMP   ,TEMPEL  ,DIE    ,THEM  ,GLOB_THERM%THEACCFACT)
-          END IF
-        ENDIF 
+      IF (JTHE /= 0) THEN  
+        IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,FHEAT ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        ELSE
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,DIE   ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        END IF
+      ENDIF 
 c--------------------------
 c     THERMAL TIME STEP
 c--------------------------
-        IF (JTHE /= 0 .AND. GLOB_THERM%IDT_THERM == 1) THEN
-           call dttherm(nel     ,pm(1,mat(1))  ,npropm  ,glob_therm   ,
-     .                  jtur    ,tempel  ,vol0    ,rho       ,
-     .                  ll      ,off     ,conde   ,gbuf%re   ,gbuf%rk )
-        ENDIF
+      IF (JTHE /= 0 .AND. GLOB_THERM%IDT_THERM == 1) THEN
+        TMU  = PM(81,IMAT)
+        RPR  = PM(95,IMAT) 
+        call dttherm(glob_therm,mat_elem%mat_param(imat)%therm,tempel ,
+     .               nel       ,jtur      ,a11(1)   ,tmu     ,rpr     ,
+     .               vol0      ,rho       ,ll       ,off     ,conde   ,
+     .               gbuf%re   ,gbuf%rk   )
+      ENDIF
 C
 C--------------------------
 C     ASSEMBLE

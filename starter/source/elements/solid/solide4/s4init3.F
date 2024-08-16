@@ -120,7 +120,7 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER NF1,IBID,I,IGTYP,IREP,NCC, IP, NUVAR, IDEF,
+      INTEGER NF1,IBID,I,IGTYP,IREP,NCC, IP, NUVAR, IDEF,IMAT,
      .   NUVARR ,JHBE,IPID1,NPTR,NPTS,NPTT,NLAY,L_SIGB,L_PLA,IMAS_DS
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ), IXT4(MVSIZ,4)
       INTEGER IX1(MVSIZ), IX2(MVSIZ), IX3(MVSIZ), IX4(MVSIZ)
@@ -172,10 +172,11 @@ C
       IMAS_DS = DEFAULTS_SOLID%IMAS
       IBOLTP = IPARG_GR(72)  !Bolt preloading
       JCVT  = IPARG_GR(37)
+      IMAT  = IXS(1,NFT+1)
 C
-       DO I=LFT,LLT
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+      DO I=LFT,LLT
+        RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C
       CALL S4COOR3(X    ,XREFS(1,1,NF1),IXS(1,NF1),NGL  ,
@@ -224,7 +225,10 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE ET TURBULENCE
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT ,PM ,GBUF%TEMP)
+      IF (JTHE/=0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
       IF(JTUR /=0) CALL ATURI3(IPARG   ,GBUF%RHO,PM  ,IXS  ,X     ,
      .                         GBUF%RK ,GBUF%RE ,VOLU   )
 C----------------------------------------
@@ -312,7 +316,7 @@ c
       AIRE(:) = ZERO
       CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,GBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     VOLU, DTX ,IGEO,IGTYP)
+     .     VOLU, DTX ,IGEO,IGTYP,MAT_PARAM(IMAT))
 C------------------------------------------
 c
       DO 10 I=LFT,LLT

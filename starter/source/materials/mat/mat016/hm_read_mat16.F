@@ -174,7 +174,10 @@ C
       PM(46)= TMELT
       PM(47)= TMAX
       PM(80)= TMELT
-C
+!
+      MATPARAM%RHO   = RHOR
+      MATPARAM%RHO0  = RHO0
+      MATPARAM%THERM%TMELT = TMELT
 C--------------------------------------
 C     GRAY
 C--------------------------------------

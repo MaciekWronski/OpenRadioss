@@ -134,7 +134,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,J, NF1, NCC, IBID, JHBE, IREP,IGTYP, NUVAR,NUVARR,IDEF,
-     .        IR,IS,IT,IPT,LVLOC,IPID1,NPTR,NPTS,NPTT,NLAY,NDDIM, 
+     .        IR,IS,IT,IPT,LVLOC,IPID1,NPTR,NPTS,NPTT,NLAY,NDDIM,IMAT, 
      .        NSPHDIR, NCELF, NCELL,L_PLA,L_SIGB,IBOLTP
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ),
      .   IX1(MVSIZ),IX2(MVSIZ),IX3(MVSIZ),IX4(MVSIZ),
@@ -205,11 +205,12 @@ c
       VOLU(1:NEL)=ZERO
 C
       IBOLTP = IPARG_GR(72)  !Bolt preloading
+      IMAT  = IXS(1,NFT+1)
 C
       DO I=1,NEL
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
-        RHO0(I) =   PM(1,IXS(1,NFT+I))
+        RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
+        RHO0(I) =   MAT_PARAM(IMAT)%RHO0
 C For air + foam
          RHOF(I) =  PM(192,IXS(1,NFT+I))
          ALPHA(I) = PM(193,IXS(1,NFT+I))
@@ -362,9 +363,12 @@ C
 C----------------------------------------
 C Thermal and Turbulence initialization
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT,PM  ,GBUF%TEMP)
-      IF(JTUR /=0) CALL ATURI3(IPARG   ,GBUF%RHO,PM,IXS,X,
-     .                         GBUF%RK ,GBUF%RE,VOLU)
+      IF (JTHE /= 0) THEN
+        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+!        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
+      IF (JTUR /=0) CALL ATURI3(IPARG   ,GBUF%RHO,PM,IXS,X,
+     .                          GBUF%RK ,GBUF%RE,VOLU)
 C----------------------------------------
 C Masses initialization
 C----------------------------------------
@@ -464,7 +468,7 @@ C------------------------------------------
       DTX(:) = ZERO
       CALL DTMAIN(GEO      , PM       , IPM        , PID    , MAT    , FV    ,
      .     GBUF%EINT, GBUF%TEMP, GBUF%DELTAX, GBUF%RK, GBUF%RE, BUFMAT, DELTAX, AIRE, 
-     .     VOLU, DTX, IGEO ,IGTYP)
+     .     VOLU, DTX, IGEO ,IGTYP,MAT_PARAM(IMAT))
 C
       DO I=1,NEL
         IF(IXS(10,I+NFT) /= 0) THEN

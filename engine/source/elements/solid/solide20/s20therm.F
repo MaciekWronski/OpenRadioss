@@ -27,11 +27,17 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    s20forc3   ../engine/source/elements/solid/solide20/s20forc3.F
       !||====================================================================
       SUBROUTINE S20THERM(
-     1   NPE,     PM,      IMAT,     NC,
-     2   VOL,     PX,      PY,      PZ,
-     3   NI,      DT1,     TEMPNC,  TEMPEL,
-     4   HEAT,    FPHI,    OFFG,    OFF,
-     5   NEL ,    THEACCFACT)
+     1   THERM   ,NEL     ,NPE,     NC,
+     2   VOL     ,PX,      PY,      PZ,
+     3   NI      ,DT1,     TEMPNC,  TEMPEL,
+     4   HEAT    ,FPHI,    OFFG,    OFF,
+     5   THEACCFACT)
+C-----------------------------------------------
+C    calculates nodal thermic force from heat energy increment
+C-----------------------------------------------
+C    M o d u l e s
+C-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -45,20 +51,20 @@ C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
       INTEGER, INTENT(IN) :: NEL
-      INTEGER, INTENT(IN) :: IMAT
       INTEGER NPE,NC(MVSIZ,NPE)
       my_real, INTENT(IN) :: THEACCFACT
       my_real :: VOL(*), PX(MVSIZ,NPE), PY(MVSIZ,NPE),PZ(MVSIZ,NPE),
-     .    NI(NPE),TEMPNC(*), FPHI(MVSIZ,NPE), PM(NPROPM,*),HEAT(*),
+     .    NI(NPE),TEMPNC(*), FPHI(MVSIZ,NPE), HEAT(*),
      .    DT1,TEMPEL(*),OFF(*),OFFG(*)
+      type (therm_param_) ,intent(in) :: therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER :: I,N
-      my_real :: CA, CB, KC, PHIX(MVSIZ), PHIY(MVSIZ), PHIZ(MVSIZ)
-C------------------------------------------------ 
-      CA = PM(75,IMAT)
-      CB = PM(76,IMAT)
+      my_real :: AS, BS, KC, PHIX(MVSIZ), PHIY(MVSIZ), PHIZ(MVSIZ)
+!==============================================================================
+      AS = THERM%AS    !< thermal conductivity coefficient A for solid phase
+      BS = THERM%BS    !< thermal conductivity coefficient B for solid phase
 !
       PHIX(1:MVSIZ) = ZERO
       PHIY(1:MVSIZ) = ZERO
@@ -76,7 +82,7 @@ C
       ENDDO
       DO I= 1,NEL
         IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
-        KC = (CA + CB*TEMPEL(I))*DT1*VOL(I)*THEACCFACT          
+        KC = (AS + BS*TEMPEL(I))*DT1*VOL(I)*THEACCFACT          
         PHIX(I) = KC*PHIX(I)
         PHIY(I) = KC*PHIY(I)
         PHIZ(I) = KC*PHIZ(I)
@@ -91,33 +97,6 @@ C
      .             - (PHIX(I)*PX(I,N) + PHIY(I)*PY(I,N) + PHIZ(I)*PZ(I,N))
        ENDDO
       ENDDO
-
-!      DO I= 1,NEL
-!       IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
-!       PHIX = ZERO
-!       PHIY = ZERO
-!       PHIZ = ZERO
-C 
-C - flux
-C
-!       DO N=1,NPE
-!        PHIX = PHIX +  TEMPNC(NC(I,N))*PX(I,N)
-!        PHIY = PHIY +  TEMPNC(NC(I,N))*PY(I,N)
-!        PHIZ = PHIZ +  TEMPNC(NC(I,N))*PZ(I,N)
-!       ENDDO
-C
-!        KC = (CA + CB*TEMPEL(I))*DT1*VOL(I)*THEACCFACT          
-!        PHIX = KC*PHIX
-!        PHIY = KC*PHIY
-!        PHIZ = KC*PHIZ
-C
-C force thermique nodale
-C
-!        DO N=1,NPE
-!          FPHI(I,N) = FPHI(I,N) +
-!     .      HEAT(I)*NI(N) - (PHIX*PX(I,N) + PHIY*PY(I,N) + PHIZ*PZ(I,N))
-!        ENDDO
-!       ENDDO
-C 
+!----------- 
       RETURN
       END

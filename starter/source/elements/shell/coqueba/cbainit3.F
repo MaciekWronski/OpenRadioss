@@ -294,7 +294,7 @@ C------------
      .            MSZ2C,ZPLY,ISUBSTACK,NLAY,ELBUF_STR,STACK,
      .            GBUF%THK_I,RNOISE   ,DRAPE       ,GLOB_THERM%NINTEMP,
      .            PERTURB,IX1     ,IX2      ,IX3     ,IX4     ,
-     .            IDRAPE  ,DRAPEG%INDX)
+     .            IDRAPE  ,DRAPEG%INDX      ,MAT_PARAM )
 C-----------------------------------------------
       IF (MTN == 1 .OR. MTN == 3 .OR. MTN == 23 .OR. MTN == 91) NPT = 0
 C---------------------------

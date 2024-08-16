@@ -188,7 +188,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER MAT(MVSIZ),PID(MVSIZ),NDT(MVSIZ),NGL(MVSIZ),FWAVE_EL(NEL),
-     .   I,J,IGTYP,ICSEN,IFLAG,IUN,NPG,ILAY,NLAY,IXEL,IXLAY,NXLAY,N1,N2,N3,N4,
+     .   I,J,IGTYP,IMAT,ICSEN,IFLAG,IUN,NPG,ILAY,NLAY,IXEL,IXLAY,NXLAY,N1,N2,N3,N4,
      .   IBID,NG,IR,IS,L_DIRA,L_DIRB,J1,J2,IGMAT,NPTTOT,IREP,IFAILWAVE,IDRAPE,
      .   NPTT,IT,ACTIFXFEM,SEDRAPE,NUMEL_DRAPE
       my_real 
@@ -244,6 +244,7 @@ C
       TARGET :: DIRA,DIRB
 !     variables for heat transfer
       my_real, dimension(mvsiz) :: fheat
+      my_real :: TMU,RPR
 !
 C--- Variables pour le non-local
       INTEGER :: NDDL, K, INOD(4),NC1(MVSIZ), NC2(MVSIZ), NC3(MVSIZ), NC4(MVSIZ),
@@ -641,25 +642,31 @@ C----------------------------
 C-------------------------
 c     Thermique des coques 
 C--------------------------
-C
-       IF (JTHE /= 0) THEN   ! /heat/mat
-         IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
-           CALL THERMC(JFT   ,JLT   ,PM     ,MAT     ,THK0  ,IXC     ,
-     .                 PX1   ,PX2   ,PY1    ,PY2     ,AREA  ,DT1C    ,
-     .                 TEMP  ,TEMPEL,FHEAT  , THEM   ,GLOB_THERM%THEACCFACT) 
-         ELSE
-           CALL THERMC(JFT   ,JLT   ,PM     ,MAT     ,THK0  ,IXC     ,
-     .                 PX1   ,PX2   ,PY1    ,PY2     ,AREA  ,DT1C    ,
-     .                 TEMP  ,TEMPEL,DIE   , THEM    ,GLOB_THERM%THEACCFACT) 
-         END IF
-       ENDIF
+      IF (JTHE /= 0) THEN   ! /heat/mat
+        IMAT = MAT(1)
+        IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,FHEAT ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        ELSE
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,DIE   ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        END IF
+      ENDIF
 C--------------------------
 C     THERMAL TIME STEP
 C--------------------------
       IF (JTHE /= 0 .AND. GLOB_THERM%IDT_THERM == 1) THEN
-           call dttherm(nel     ,pm(1,mat(1))  ,npropm  ,glob_therm   ,
-     .                  jtur    ,tempel  ,vol0    ,rho       ,
-     .                  aldt    ,off     ,conde   ,gbuf%re   ,gbuf%rk )
+        IMAT = MAT(1)
+        TMU  = PM(81,IMAT)
+        RPR  = PM(95,IMAT) 
+        call dttherm(glob_therm,mat_elem%mat_param(imat)%therm,tempel ,
+     .               nel       ,jtur      ,a11(1)   ,tmu     ,rpr     ,
+     .               vol0      ,rho       ,aldt     ,off     ,conde   ,
+     .               gbuf%re   ,gbuf%rk   )
       ENDIF 
 c-------------------------
 c     Virtual internal forces of regularized non local ddl 

@@ -88,7 +88,7 @@ C-----------------------------------------------
       INTEGER JTHE, IFLAGR
       my_real
      .   YOUNG, ANU, CA, CB, CN, EPSM, SIGM, BULK, 
-     .   PMIN, CC, EPS0, CM, TMELT, TMAX, CS, T0, SPH, AS, BS,
+     .   PMIN, CC, EPS0, CM, TMELT, TMAX, CS, T0, RHOCP, AS, BS,
      .   AL, BL, G, TBA, TBK, PCO, FAC_L, FAC_T, FAC_M, FAC_C,
      .   BID2 ,BID3 ,BID4 ,BID5 ,
      .   BID2_,BID3_,BID4_,BID5_,
@@ -180,8 +180,6 @@ C-----------------------------------------------
      
       IF (PMIN==ZERO) PMIN=-EP20
       IF (RHOR==ZERO) RHOR=RHO0
-      PM(1) = RHOR
-      PM(89)= RHO0      
  
    
       IF(CS == ZERO.AND.TMELT == ZERO)THEN
@@ -198,7 +196,7 @@ C-----------------------------------------------
      .               I1=MAT_ID,
      .               C1=TITR)
       END IF
-      SPH=CS
+      RHOCP=CS
       IF(PMIN == ZERO) PMIN  =-EP20
       IF(CN == ZERO.OR.CN == ONE)   CN = ONEP0001
       IF(EPSM == ZERO) EPSM  = EP20
@@ -211,6 +209,8 @@ C-----------------------------------------------
       G=YOUNG/(TWO*(ONE + ANU))
       IF(.NOT.EOS_EMBEDDED)BULK=YOUNG/(THREE*(ONE - TWO*ANU))
 C
+      PM(1) = RHOR
+      PM(89)= RHO0      
       PM(20)=YOUNG
       PM(21)=ANU
       PM(22)=G
@@ -227,9 +227,15 @@ C
       PM(46)=TMELT
       PM(47)=TMAX
       PM(48)=CS
-      PM(69)=SPH
+      PM(69)=RHOCP
       PM(79)=T0
       PM(80)=TMELT
+!      
+      MAT_PARAM%RHO         = RHOR
+      MAT_PARAM%RHO0        = RHO0
+      MAT_PARAM%THERM%TREF  = T0
+      MAT_PARAM%THERM%TMELT = TMELT
+      MAT_PARAM%THERM%RHOCP = RHOCP
 CC-----------
 C     Formulation for solid elements time step computation.
       IPM(252)= 2
@@ -256,8 +262,7 @@ C     Formulation for solid elements time step computation.
 !
       ! activate heat source calculation in material for /heat/mat
 
-      MAT_PARAM%HEAT_FLAG = 1
-      
+      MAT_PARAM%HEAT_FLAG = 1      
 C--------------------------------
       WRITE(IOUT,2001) TITR,MAT_ID,4
       WRITE(IOUT,1000)

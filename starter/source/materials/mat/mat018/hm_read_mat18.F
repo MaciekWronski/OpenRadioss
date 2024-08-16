@@ -37,7 +37,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       SUBROUTINE HM_READ_MAT18(
      .           NUPARAM  ,NUVAR    ,NFUNC    ,MAT_ID   ,TITR      ,
      .           UNITAB   ,LSUBMODEL,MTAG     ,PM       ,IPM       ,
-     .           JTHE     ,MATPARAM ) 
+     .           JTHE     ,MAT_PARAM ) 
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -71,13 +71,13 @@ C-----------------------------------------------
       my_real, INTENT(INOUT) :: PM(NPROPM)     
       INTEGER, INTENT(INOUT) :: NUPARAM,NUVAR,NFUNC,JTHE
       TYPE(MLAW_TAG_) ,INTENT(INOUT) :: MTAG
-      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MATPARAM
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       LOGICAL :: IS_AVAILABLE,IS_ENCRYPTED
       INTEGER :: ILAW,ITF,ISPH,IAS
-      my_real :: RHOR,RHO0,T0,SPH,AS,BS,E0,TIMESCAL,TSCAL,ESCAL,KSCAL
+      my_real :: RHOR,RHO0,T0,RHOCP,AS,BS,E0,TIMESCAL,TSCAL,ESCAL,KSCAL
 C=======================================================================
       IS_ENCRYPTED = .FALSE.
       IS_AVAILABLE = .FALSE.
@@ -95,7 +95,7 @@ c--------------------------------------------------
       CALL HM_GET_FLOATV('MAT_RHO'   ,RHO0     ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('Refer_Rho' ,RHOR     ,IS_AVAILABLE, LSUBMODEL, UNITAB)
 c
-      CALL HM_GET_FLOATV('MAT_SPHEAT',SPH      ,IS_AVAILABLE, LSUBMODEL, UNITAB)
+      CALL HM_GET_FLOATV('MAT_SPHEAT',RHOCP    ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT_A'     ,AS       ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT_B'     ,BS       ,IS_AVAILABLE, LSUBMODEL, UNITAB)
 c
@@ -127,7 +127,7 @@ c
       TIMESCAL = ONE / TIMESCAL
       ESCAL    = ONE / ESCAL
       IF (T0 == ZERO) T0 = THREE100
-      E0 = T0*SPH
+      E0 = T0*RHOCP
 c
 c------------------
       NFUNC   = 0
@@ -147,7 +147,7 @@ c
       PM(44) = KSCAL
       PM(71) = JTHE+EM01
       PM(72) = ZERO
-      PM(69) = SPH
+      PM(69) = RHOCP
       PM(75) = AS
       PM(76) = BS
       PM(79) = T0
@@ -155,6 +155,13 @@ c
 c---
       PM(1)  = RHOR
       PM(89) = RHO0
+!      
+c--------------------------
+      MAT_PARAM%RHO         = RHOR
+      MAT_PARAM%RHO0        = RHO0
+      MAT_PARAM%THERM%TREF  = T0
+      MAT_PARAM%THERM%TMELT = INFINITY
+      MAT_PARAM%THERM%RHOCP = RHOCP
 c--------------------------
 c
 c---- Definition des variables internes (stockage elementaire)
@@ -167,12 +174,12 @@ c
       ! MATPARM keywords
 
       ! EOS/Thermo keyword for pressure treatment in elements
-      CALL INIT_MAT_KEYWORD(MATPARAM,"HYDRO_EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"HYDRO_EOS")
 
-      CALL INIT_MAT_KEYWORD(MATPARAM,"INCOMPRESSIBLE")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"INCOMPRESSIBLE")
 
       ! Properties compatibility
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SOLID_ORTHOTROPIC")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SOLID_ORTHOTROPIC")
 c--------------------------------------------------
 c     Starter output
 c--------------------------------------------------
@@ -183,7 +190,7 @@ c--------------------------------------------------
       ELSE
         WRITE(IOUT,1200) RHO0,RHOR
         IF (ITF > 0) WRITE(IOUT,1300) ITF
-        WRITE(IOUT,1400) T0,SPH,AS,BS,ISPH,IAS
+        WRITE(IOUT,1400) T0,RHOCP,AS,BS,ISPH,IAS
       ENDIF     
 c-----------------------------------------------------------------------
  1000 FORMAT(/

@@ -54,7 +54,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    message_mod            ../starter/share/message_module/message_mod.F
       !||    stack_mod              ../starter/share/modules1/stack_mod.F
       !||====================================================================
-      SUBROUTINE INIVOID(ELBUF_STR   ,
+      SUBROUTINE INIVOID(MAT_PARAM,ELBUF_STR   ,
      +                   IXC    ,IXS    ,IXTG   ,X      ,V      ,
      1                   PM     ,GEO    ,MS     ,IN     ,PTG    ,
      2                   MSC    ,MSS    ,MSTG   ,INC    ,INTG   ,
@@ -76,6 +76,7 @@ C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
       USE ELBUFDEF_MOD
+      USE MATPARAM_DEF_MOD
       USE STACK_MOD
       USE MESSAGE_MOD
       USE DEFAULTS_MOD
@@ -126,6 +127,7 @@ C-----------------------------------------------
      .   MST(*),MSP(*),STT(*),STP(*),STRP(*),INP(*),STIFINT(*),MCPP(*),
      .   INR(3,*),MSR(3,*),MSRT(*),STR(*)
       TYPE(ELBUF_STRUCT_), TARGET :: ELBUF_STR
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
       TYPE(DEFAULTS_), INTENT(IN) :: DEFAULTS             
       type(glob_therm_) ,intent(inout) :: glob_therm
 C-----------------------------------------------
@@ -184,17 +186,19 @@ C
       IMAS_DS = DEFAULTS%SOLID%IMAS
 C--------------------------------------
       IF(ITY == 1.AND.ISOLNOD == 4)THEN
+        IMAT  = IXS(1,1+NFT)         ! material number
+        IPROP = IXS(NIXS-1,1+NFT)    ! property number
 C Solid 4 nodes tetrahedron
         CALL S4COOR3(X    ,XREFS(1,1,NFT+1),IXS(1,NFT+1),NGL  ,
      .               MXT  ,PID  ,IX1  ,IX2  ,IX3  ,IX4  ,
      .               X1   ,X2   ,X3   ,X4   ,Y1   ,Y2   ,
      .               Y3   ,Y4   ,Z1   ,Z2   ,Z3   ,Z4   )
         DO I=1,NEL
-          RHO(I) = PM(89,MXT(I))
-          DTELEM(NFT+I) = EP30
+          RHO(I) = MAT_PARAM(IMAT)%RHO0
+          DTELEM(NFT+I) = EP20
           FILL(I) = ONE
-          RHOCP(I) =  PM(69,MXT(I))
-          TEMP0(I) =  PM(79,MXT(I))
+          RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+          TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
         ENDDO
         CALL S4DERI3(VOL,VEUL(1,NFT+1) ,GEO ,IGEO   ,RX  ,
      .       RY    ,RZ    ,SX    ,SY    ,
@@ -230,6 +234,8 @@ C Solid 20 nodes brick not supported
 C--------------------------------------
       ELSEIF(ITY == 1)THEN
 C Solid  8 nodes brick
+        IMAT  = IXS(1,1+NFT)         ! material number
+        IPROP = IXS(NIXS-1,1+NFT)    ! property number
         DO I=1,NEL
           RHOCP(I) = ZERO
           TEMP0(I) = ZERO
@@ -247,8 +253,8 @@ C Solid  8 nodes brick
      .           ZD1  ,ZD2  ,ZD3  ,ZD4  ,ZD5  ,ZD6  ,ZD7  ,ZD8   )
         IF((JEUL == 0.OR.INTEG8 == 0).AND. NPT /= 8) THEN
           DO I=1,NEL
-            RHO(I) = PM(89,MXT(I))
-            DTELEM(NFT+I) = EP30
+            RHO(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+            DTELEM(NFT+I) = EP20
             FILL(I) = ONE
           ENDDO
           CALL SDERI3(VOL ,VEUL(1,NFT+1) ,GEO  ,IGEO ,
@@ -310,7 +316,7 @@ C
      .              TEMP    ,BID , BID,BID,BID,
      .              BID,BID,ISUBSTACK,IBID,BIDBUF,
      .              STACK,BIDG ,RNOISE,BID,GLOB_THERM,
-     .              PERTURB,IX1     ,IX2      ,IX3     ,IX4     ,IBID, IBID)
+     .              PERTURB,IX1     ,IX2      ,IX3     ,IX4     ,IBID, IBID, IBID)
 
         NDEPAR=NUMELS+NFT
         DO I=1,NEL
@@ -345,8 +351,8 @@ C
      .               ETNOD,NSHNOD,STTG(NFT+1), SH3TREE,MCP   ,
      .               MCPS(1,NFT+1) , TEMP,SH3TRIM,ISUBSTACK,IBID,
      .               BIDBUF, STACK,BIDG ,RNOISE,
-     .               BID,PERTURB,IX1   ,IX2      ,IX3    ,GLOB_THERM%NINTEMP,
-     .               X2L      ,X3L    ,Y3L   ,IBID, IBID)
+     .               BID,PERTURB,IX1   ,IX2      ,IX3 ,GLOB_THERM%NINTEMP,
+     .               X2L      ,X3L    ,Y3L   ,IBID, IBID,MAT_PARAM)
 
         NDEPAR=NUMELS+NUMELC+NUMELT+NUMELP+NUMELR+NFT
         DO I=1,NEL
@@ -376,7 +382,7 @@ C Beam element
      .                    MXT,PID ,IX1,IX2,IX3,DELTAX,
      .                    X1,X2,X3, Y1,Y2,Y3, Z1,Z2,Z3)
 c
-        CALL PMASS(GEO,PM,MS,IN,
+        CALL PMASS(MAT_PARAM,GEO,PM,MS,IN,
      .             STIFNTMP,STIFNTMP,PARTSAV,V,IPARTP(NFT+1),
      .             MSP(NFT+1),INP(NFT+1),IGEO , STIFINT, STP(NFT+1),
      .             X1,X2, Y1,Y2, Z1,Z2,
@@ -470,9 +476,9 @@ C
      +               (X(1,I1)-X(1,I2))*(X(1,I1)-X(1,I2))
      +            +  (X(2,I1)-X(2,I2))*(X(2,I1)-X(2,I2))
      +            +  (X(3,I1)-X(3,I2))*(X(3,I1)-X(3,I2)) )
-             IF(IGTYP  == 23) THEN
+             IF (IGTYP  == 23) THEN
                  IMAT  = IXR(5,I+NFT)
-                 RHOR = PM(1,IMAT)
+                 RHOR = MAT_PARAM(IMAT)%RHO
                  IMASS = IGEO(4,I0)
                  MTN = 0
                  UINER(I) = ZERO

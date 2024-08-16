@@ -28,7 +28,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    s8zforc3   ../engine/source/elements/solid/solide8z/s8zforc3.F
       !||====================================================================
       SUBROUTINE S8ETHERM(
-     1   PM,      IMAT,     VOL,     NI,
+     1   THERM,   VOL,     NI,
      2   NC1,     NC2,     NC3,     NC4,
      3   NC5,     NC6,     NC7,     NC8,
      4   PX1,     PX2,     PX3,     PX4,
@@ -37,9 +37,15 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      7   PX5,     PX6,     PX7,     PX8,
      8   PY5,     PY6,     PY7,     PY8,
      9   PZ5,     PZ6,     PZ7,     PZ8,
-     A   DT1,     TEMPNC,  TEL,     HEAT,
+     A   DT1,     TEMPNC,  TEMPEL,  HEAT,
      B   FPHI,    OFFG,    OFF,     PARTSAV,
      C   IPARTS,  VOL0,    NEL,     THEACCFACT)
+C-----------------------------------------------
+C    calculates nodal thermic force from heat energy increment
+C-----------------------------------------------
+C    M o d u l e s
+C-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -53,38 +59,39 @@ C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
       INTEGER, INTENT(IN) :: NEL
-      INTEGER, INTENT(IN) :: IMAT
+      INTEGER :: IPARTS(*)
+      INTEGER, DIMENSION(MVSIZ), INTENT(IN) :: NC1,NC2,NC3,NC4
+      INTEGER, DIMENSION(MVSIZ), INTENT(IN) :: NC5,NC6,NC7,NC8
       my_real, INTENT(IN) :: THEACCFACT
-      INTEGER IPARTS(*),
-     .        NC1(MVSIZ),NC2(MVSIZ),NC3(MVSIZ),NC4(MVSIZ),
-     .        NC5(MVSIZ),NC6(MVSIZ),NC7(MVSIZ),NC8(MVSIZ)
-C     REAL
-      my_real
-     .    VOL(*), PX1(MVSIZ), PY1(MVSIZ),PZ1(MVSIZ),
-     .            PX2(MVSIZ), PY2(MVSIZ),PZ2(MVSIZ),
-     .            PX3(MVSIZ), PY3(MVSIZ),PZ3(MVSIZ),
-     .            PX4(MVSIZ), PY4(MVSIZ),PZ4(MVSIZ),
-     .            PX5(MVSIZ), PY5(MVSIZ),PZ5(MVSIZ),
-     .            PX6(MVSIZ), PY6(MVSIZ),PZ6(MVSIZ),
-     .            PX7(MVSIZ), PY7(MVSIZ),PZ7(MVSIZ),
-     .            PX8(MVSIZ), PY8(MVSIZ),PZ8(MVSIZ),        
-     .    NI(8),TEMPNC(*), FPHI(MVSIZ,8), PM(NPROPM,*), HEAT(*),
-     .    DT1, TEL(*), OFF(*), OFFG(*)
-      my_real PARTSAV(NPSAV,*),VOL0(*)
+      my_real, INTENT(IN) :: DT1
+      my_real, DIMENSION(NEL)  , INTENT(IN) :: VOL
+      my_real, DIMENSION(NEL)  , INTENT(IN) :: VOL0
+      my_real, DIMENSION(NEL)  , INTENT(IN) :: TEMPEL
+      my_real, DIMENSION(NEL)  , INTENT(IN) :: OFF
+      my_real, DIMENSION(NEL)  , INTENT(IN) :: OFFG
+      my_real, DIMENSION(MVSIZ), INTENT(IN) :: HEAT
+      my_real, DIMENSION(MVSIZ), INTENT(IN) :: PX1,PX2,PX3,PX4,PX5,PX6,PX7,PX8
+      my_real, DIMENSION(MVSIZ), INTENT(IN) :: PY1,PY2,PY3,PY4,PY5,PY6,PY7,PY8
+      my_real, DIMENSION(MVSIZ), INTENT(IN) :: PZ1,PZ2,PZ3,PZ4,PZ5,PZ6,PZ7,PZ8
+      my_real :: NI(8)
+      my_real :: TEMPNC(*)
+      my_real :: FPHI(MVSIZ,8)
+      my_real :: PARTSAV(NPSAV,*)
+      type (therm_param_) ,intent(in) :: therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I, M
 C     REAL
-      my_real CA, CB, KC, PHIX, PHIY, PHIZ, RHOCP, T0
+      my_real AS, BS, KC, PHIX, PHIY, PHIZ, RHOCP, T0
 !=======================================================================
-      CA = PM(75,IMAT)
-      CB = PM(76,IMAT)
-      RHOCP = PM(69,IMAT)
-      T0  = PM(79,IMAT)
+      AS    = THERM%AS    !< thermal conductivity coefficient A for solid phase
+      BS    = THERM%BS    !< thermal conductivity coefficient B for solid phase
+      RHOCP = THERM%RHOCP 
+      T0    = THERM%TREF 
 !
       DO I=1,NEL
-       IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
+        IF (OFF(I)==ZERO .OR. OFFG(I)<=ZERO) CYCLE
 C 
 C - flux
           PHIX =  TEMPNC(NC1(I))*PX1(I) + TEMPNC(NC2(I))*PX2(I)  +
@@ -102,7 +109,7 @@ C - flux
      .            TEMPNC(NC5(I))*PZ5(I) + TEMPNC(NC6(I))*PZ6(I)  +
      .            TEMPNC(NC7(I))*PZ7(I) + TEMPNC(NC8(I))*PZ8(I) 
 C
-        KC = (CA + CB*TEL(I))*DT1*VOL(I)*THEACCFACT          
+        KC = (AS + BS*TEMPEL(I))*DT1*VOL(I)*THEACCFACT          
         PHIX = KC*PHIX
         PHIY = KC*PHIY
         PHIZ = KC*PHIZ
@@ -130,7 +137,7 @@ C
       DO I=1,NEL
          IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
          M   = IPARTS(I)
-         PARTSAV(28,M)=PARTSAV(28,M) + RHOCP*VOL0(I)*(TEL(I)-T0) + HEAT(I)
+         PARTSAV(28,M)=PARTSAV(28,M) + RHOCP*VOL0(I)*(TEMPEL(I)-T0) + HEAT(I)
       ENDDO
 C 
       RETURN

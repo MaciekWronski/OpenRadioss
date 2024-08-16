@@ -106,7 +106,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER NF1,IBID,I,IGTYP,IP,NF2,NPTR,NPTS,NPTT,NLAY,IL,IR,IS,IT,
-     .        N, NUVAR,IINT, NCC,IDEF,JHBE,IPID1,L_PLA,L_SIGB
+     .        N, NUVAR,IINT, NCC,IDEF,JHBE,IPID1,L_PLA,L_SIGB,IMAT
       INTEGER NC(MVSIZ,16),MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ),RBID(1)
       CHARACTER(LEN=NCHARTITLE)::TITR1
       my_real
@@ -311,8 +311,9 @@ C=======================================================================
       NLAY = ELBUF_STR%NLAY
 c
       JHBE  = IPARG(23)
-      IINT =  IPARG(36)
+      IINT  = IPARG(36)
       IGTYP = IPARG(38)
+      IMAT  = IXS(1,NFT+1)
       IDEF  = 0
       NF1=NFT+1
       NF2=NF1-(NUMELS8+NUMELS10+NUMELS20)
@@ -320,8 +321,8 @@ c
       RBID = ZERO
 C
       DO I=LFT,LLT
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) = MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C
       CALL S16COOR3(
@@ -343,7 +344,7 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE 
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE /= 0) CALL ATHERI(MAT,PM,GBUF%TEMP)
 C-----------------------------
 C     POINTS D' INTEGRATION
 C-----------------------------
@@ -455,7 +456,7 @@ C
       AIRE(:) = ZERO
       CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,GBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     GBUF%VOL, DTX, IGEO,IGTYP)
+     .     GBUF%VOL, DTX, IGEO,IGTYP,MAT_PARAM(IMAT))
 c
       CALL S16MASS3(
      1        MASS         ,MAS,PARTSAV,IPARTS(NF1),MSS(1,NF1),VOLG,

@@ -127,7 +127,7 @@ C-----------------------------------------------
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ)
       INTEGER IX1(MVSIZ), IX2(MVSIZ), IX3(MVSIZ), IX4(MVSIZ),
      .        IX5(MVSIZ), IX6(MVSIZ), IX7(MVSIZ), IX8(MVSIZ)
-      INTEGER NF1, I, IL, IGTYP,IPID1,NCC,IDEF,NREFSTA,
+      INTEGER NF1, I, IL, IGTYP,IPID1,NCC,IDEF,NREFSTA,IMAT,
      .     IP,IR, IS, IT,JHBE,IREP,MPT,NLAY,NPTR,NPTS,NPTT,NUVAR,
      .     L_PLA,L_SIGB,NSPHDIR, NCELF, NCELL,IBOLTP,L_JAC,NNPT
       CHARACTER(LEN=NCHARTITLE)::TITR1
@@ -258,6 +258,7 @@ c
       IF (JHBE == 17) MPT = 222
       IREP  = IPARG(35)
       IGTYP = IPARG(38)
+      IMAT  = IXS(1,NFT+1)
       IF (JHBE == 17) JCVT=IPARG(37)
 C
       IF (JCVT==1.AND.ISORTH/=0) JCVT=2
@@ -268,8 +269,8 @@ C
       IBOLTP = IPARG(72)  !Bolt preloading
 C
       DO I=LFT,LLT
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) = MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
       
 C-----JAC_I [J]^-1 is calculated in global system
@@ -453,7 +454,10 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE 
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE/=0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C
       CALL SCZERO3(GBUF%RHO,GBUF%SIG,GBUF%EINT,NEL)
       IF (JHBE == 17) THEN
@@ -599,7 +603,7 @@ C------------------------------------------
         AIRE(:) = ZERO
         CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .       LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .       VOLU, DTX,IGEO,IGTYP)
+     .       VOLU, DTX,IGEO,IGTYP,MAT_PARAM(IMAT))
 c
        DO 10 I=LFT,LLT
         IF(IXS(10,I+NFT)/=0.AND.INVERS>14) THEN

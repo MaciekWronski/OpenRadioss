@@ -37,6 +37,7 @@ C   M o d u l e s
 C-----------------------------------------------
       USE MAT_ELEM_MOD
       USE NAMES_AND_TITLES_MOD
+      use write_therpmaram_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -49,13 +50,14 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER :: I,NUMMAT,IMAT,NUPARAM,NIPARAM,NUMTABL,NFAIL,IAD,NFIX,NFIXR,LENI,LENR,NMOD,MOD
+      INTEGER :: I,NUMMAT,IMAT,NUPARAM,NIPARAM,NUMTABL,NFAIL,ITHERM,IEXPAN
+      INTEGER :: IAD,NFIX,NFIXR,LENI,LENR,NMOD,MOD
       INTEGER ,DIMENSION(NCHARTITLE)     :: NAME
       INTEGER ,DIMENSION(:) ,ALLOCATABLE :: IBUF
       INTEGER :: NBSUBMAT, ISUB
       my_real ,DIMENSION(:) ,ALLOCATABLE :: RBUF
 C=======================================================================
-      NFIX = 20
+      NFIX = 22
       NUMMAT = MAT_ELEM%NUMMAT
       LENI   = NFIX*NUMMAT
       ALLOCATE (IBUF(LENI) )
@@ -73,20 +75,21 @@ C=======================================================================
         IBUF(IAD+ 8) = MAT_ELEM%MAT_PARAM(IMAT)%NFAIL
         IBUF(IAD+ 9) = MAT_ELEM%MAT_PARAM(IMAT)%IVISC
         IBUF(IAD+10) = MAT_ELEM%MAT_PARAM(IMAT)%IEOS
-        IBUF(IAD+11) = MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG
-
-        IBUF(IAD+12) = MAT_ELEM%MAT_PARAM(IMAT)%COMPRESSIBILITY
-        IBUF(IAD+13) = MAT_ELEM%MAT_PARAM(IMAT)%SMSTR
-        IBUF(IAD+14) = MAT_ELEM%MAT_PARAM(IMAT)%STRAIN_FORMULATION
-        IBUF(IAD+15) = MAT_ELEM%MAT_PARAM(IMAT)%IPRES
-        IBUF(IAD+16) = MAT_ELEM%MAT_PARAM(IMAT)%ORTHOTROPY
-
-        IBUF(IAD+17) = MAT_ELEM%MAT_PARAM(IMAT)%NLOC
-        IBUF(IAD+18) = MAT_ELEM%MAT_PARAM(IMAT)%IFAILWAVE
-        IBUF(IAD+19) = MAT_ELEM%MAT_PARAM(IMAT)%IXFEM
-
-        IBUF(IAD+20) = MAT_ELEM%MAT_PARAM(IMAT)%NMOD
-
+        IBUF(IAD+11) = MAT_ELEM%MAT_PARAM(IMAT)%ITHERM
+        IBUF(IAD+12) = MAT_ELEM%MAT_PARAM(IMAT)%IEXPAN
+        IBUF(IAD+13) = MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG
+c
+        IBUF(IAD+14) = MAT_ELEM%MAT_PARAM(IMAT)%COMPRESSIBILITY
+        IBUF(IAD+15) = MAT_ELEM%MAT_PARAM(IMAT)%SMSTR
+        IBUF(IAD+16) = MAT_ELEM%MAT_PARAM(IMAT)%STRAIN_FORMULATION
+        IBUF(IAD+17) = MAT_ELEM%MAT_PARAM(IMAT)%IPRES
+        IBUF(IAD+18) = MAT_ELEM%MAT_PARAM(IMAT)%ORTHOTROPY
+c                 
+        IBUF(IAD+19) = MAT_ELEM%MAT_PARAM(IMAT)%NLOC
+        IBUF(IAD+20) = MAT_ELEM%MAT_PARAM(IMAT)%IFAILWAVE
+        IBUF(IAD+21) = MAT_ELEM%MAT_PARAM(IMAT)%IXFEM
+        IBUF(IAD+22) = MAT_ELEM%MAT_PARAM(IMAT)%NMOD
+c
         IAD = IAD + NFIX
       END DO
 
@@ -154,9 +157,20 @@ C=======================================================================
         IF (MAT_ELEM%MAT_PARAM(IMAT)%IVISC > 0) THEN
           CALL WRITE_VISCPARAM(MAT_ELEM%MAT_PARAM(IMAT)%VISC,LEN)
         END IF
-      END DO
-
-      ! write parameters of failure models per material
+      END DO      
+c           
+c     write thermal parameters
+c
+      DO IMAT = 1,NUMMAT
+        itherm = mat_elem%mat_param(imat)%itherm
+        iexpan = mat_elem%mat_param(imat)%iexpan
+        if (itherm > 0 .or. iexpan > 0) then
+          CALL WRITE_THERMPARAM(MAT_ELEM%MAT_PARAM(IMAT)%THERM,LEN)
+        END IF
+      END DO      
+c      
+c     write parameters of failure models per material
+c          
       DO IMAT = 1,NUMMAT
         NFAIL = MAT_ELEM%MAT_PARAM(IMAT)%NFAIL
         IF (NFAIL > 0) THEN

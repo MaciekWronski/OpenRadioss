@@ -69,6 +69,7 @@ C   S o u r c e   L i n e s
 C-----------------------------------------------
       DO I=LFT,LLT
         TEMP(I) = PM(79,MAT(I))
+ !       TEMP(I) = MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C-----------------------------------------------
       RETURN

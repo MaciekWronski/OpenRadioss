@@ -490,18 +490,18 @@ C--------------------------
             IMAT = MXT(1)
             IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
               CALL S20THERM(
-     1             NPE,       PM,       IMAT,       NC,
+     1            MAT_ELEM%MAT_PARAM(IMAT)%THERM,NEL   ,NPE  ,NC   ,
      2             VOLN,      PX(1,1,IP),PY(1,1,IP),PZ(1,1,IP),
      3             NI(1,IP),  DT1,       TEMP,      TEMPEL,
      4             FHEAT,     THEM,      GBUF%OFF,  LBUF%OFF,
-     5             NEL        ,GLOB_THERM%THEACCFACT)
+     5             GLOB_THERM%THEACCFACT)
             ELSE
               CALL S20THERM(
-     1             NPE,       PM,       IMAT,       NC,
+     1            MAT_ELEM%MAT_PARAM(IMAT)%THERM,NEL   ,NPE  ,NC   ,
      2             VOLN,      PX(1,1,IP),PY(1,1,IP),PZ(1,1,IP),
      3             NI(1,IP),  DT1,       TEMP,      TEMPEL,
      4             DIE ,      THEM,      GBUF%OFF,  LBUF%OFF,
-     5             NEL        ,GLOB_THERM%THEACCFACT)
+     5             GLOB_THERM%THEACCFACT)
             END IF
           ENDIF  
 

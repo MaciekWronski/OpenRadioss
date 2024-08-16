@@ -719,14 +719,14 @@ C
           IMAT = MXT(1)
           IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
             CALL S10THERM(
-     1           PM,        IMAT,       NC,        VOLN,
+     1           MAT_ELEM%MAT_PARAM(IMAT)%THERM,NC,        VOLN,
      2           PX(1,1,IP),PY(1,1,IP),PZ(1,1,IP),NX(1,1,IP),
      3           DT1,       TEMP,      TEMPEL,    FHEAT,
      4           THEM,      GBUF%OFF,  LBUF%OFF,  NEL,
      5           GLOB_THERM%THEACCFACT)
           ELSE
             CALL S10THERM(
-     1           PM,        IMAT,       NC,        VOLN,
+     1           MAT_ELEM%MAT_PARAM(IMAT)%THERM,NC,        VOLN,
      2           PX(1,1,IP),PY(1,1,IP),PZ(1,1,IP),NX(1,1,IP),
      3           DT1,       TEMP,      TEMPEL,    DIE,
      4           THEM,      GBUF%OFF,  LBUF%OFF,  NEL,
@@ -739,12 +739,12 @@ c----------
       IF (JTHE < 0 .AND. ISOLNOD == 4) THEN
           IMAT = MXT(1)
           IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
-            CALL S4THERM_ITET1(PM   ,IMAT   ,NC   ,NEL  ,
+            CALL S4THERM_ITET1(MAT_ELEM%MAT_PARAM(IMAT)%THERM,NC   ,NEL  ,
      .                         XX   ,YY     ,ZZ   ,DT1  ,FHEAT ,
      .                         TEMP ,THEM   ,GBUF%OFF   ,LBUF%OFF,
      .                         GLOB_THERM%THEACCFACT)
           ELSE
-            CALL S4THERM_ITET1(PM   ,IMAT   ,NC   ,NEL  ,
+            CALL S4THERM_ITET1(MAT_ELEM%MAT_PARAM(IMAT)%THERM,NC   ,NEL  ,
      .                         XX   ,YY     ,ZZ   ,DT1  ,DIE ,
      .                         TEMP ,THEM   ,GBUF%OFF   ,LBUF%OFF,
      .                         GLOB_THERM%THEACCFACT)

@@ -56,11 +56,11 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .     XREFS     ,NPF      ,TF     ,MSSA    ,STRSGLOB,
      .     STRAGLOB  ,FAIL_INI ,SPBUF  ,KXSP    ,IPARTSP ,
      .     NOD2SP    ,SOL2SPH  ,IRST   ,ILOADP  ,FACLOAD,
-     .     MULTI_FVM, ERROR_THROWN,DETONATORS,MAT_PARAM)
+     .     MULTI_FVM ,ERROR_THROWN,DETONATORS   ,MAT_PARAM)
 C-----------------------------------------------
 C     M o d u l e s
 C-----------------------------------------------
-      USE ELBUFDEF_MOD            
+      USE MAT_ELEM_MOD            
       USE MESSAGE_MOD
       USE MULTI_FVM_MOD
       USE DETONATORS_MOD
@@ -161,7 +161,7 @@ C-----------------------------------------------
       TYPE(BUF_LAY_) ,POINTER :: BUFLY
       my_real,
      .     DIMENSION(:), POINTER  :: UVARF   
-      INTEGER :: NODE1, NODE2, NODE3, NODE4, NODE5, NODE6, NODE7, NODE8
+      INTEGER :: IMAT,NODE1, NODE2, NODE3, NODE4, NODE5, NODE6, NODE7, NODE8
 C-----------------------------------------------
 C     S o u r c e  L i n e s
 C=======================================================================
@@ -184,12 +184,13 @@ C     ???
       NPTS  =  ELBUF_STR%NPTS
       NPTT  =  ELBUF_STR%NPTT
 
+      IMAT = IXS(1,NFT+1)
       DO I=1,NEL
-         RHOCP(I) =  PM(69,IXS(1,NFT+I))
-         TEMP0(I) =  PM(79,IXS(1,NFT+I))
+         RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+         TEMP0(I) = MAT_PARAM(IMAT)%THERM%TREF
 C     for air + foam
-         RHOF(I) =  PM(192,IXS(1,NFT+I))
-         ALPHA(I) = PM(193,IXS(1,NFT+I))
+         RHOF(I)  = PM(192,IMAT)
+         ALPHA(I) = PM(193,IMAT)
       ENDDO
 C-----JAC_I [J]^-1 is calculated in global system
       IF (ISMSTR==10.OR.ISMSTR==12) THEN
@@ -337,7 +338,10 @@ C      Temperature globalization. We must solve later T such as e+p/rho=integral
 C----------------------------------------
 C Thermal and turbulence initialization 
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT,PM  ,GBUF%TEMP)
+      IF (JTHE /= 0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF 
       IF(JTUR /=0) CALL ATURI3(IPARG   ,GBUF%RHO,PM,IXS,X,
      .     GBUF%RK ,GBUF%RE,VOLU)
 C----------------------------------------
@@ -357,7 +361,8 @@ C Element time steps
 C------------------------------------------
       AIRE(:) = ZERO
       CALL DTMAIN(GEO      , PM       , IPM        , PID    , MAT    , FV    ,
-     .     GBUF%EINT, GBUF%TEMP, GBUF%DELTAX, GBUF%RK, GBUF%RE, BUFMAT, DELTAX, AIRE, VOLU, DTX, IGEO,IGTYP)
+     .     GBUF%EINT, GBUF%TEMP, GBUF%DELTAX, GBUF%RK, GBUF%RE, BUFMAT, 
+     .     DELTAX, AIRE, VOLU, DTX, IGEO,IGTYP,MAT_PARAM(MAT(1)))
 C     
       DO I=1,NEL
          IF(IXS(10,I+NFT)/=0) THEN

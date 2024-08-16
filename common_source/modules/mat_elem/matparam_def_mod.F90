@@ -302,6 +302,7 @@
       use table4d_mod
       use visc_param_mod
       use fail_param_mod
+      use therm_param_mod
       use names_and_titles_mod
       use multimat_param_mod
       use eos_param_mod
@@ -330,6 +331,8 @@
         integer     :: nfail                !< number of failure models
         integer     :: ivisc                !< viscosity model number
         integer     :: ieos                 !< eos model (type)
+        integer     :: itherm               !< thermal option activation flag (/heat/mat)
+        integer     :: iexpan               !< thermal volumic expansion flag (/therm_stress)
         integer     :: heat_flag            !< dissipated energy (heat source) is output by material law
         ! -------  material characteristics flags
         integer     :: compressibility      !< "compressible","incompressible","elasto_plastic"
@@ -337,7 +340,7 @@
         integer     :: strain_formulation   !< "total", "incremental"
         integer     :: ipres                !< "hydrostatic",hydro_eos","hook"
         integer     :: orthotropy           !< "isotropic", "orthotropic", "anisotropic"
-        ! ------- compatibility flags
+        ! ------- compatibility flags - not written in restart file, for starter check only
         integer     :: prop_solid           !< "solid_isotropic","solid_orthotropic","solid_composite","solid_cohesive"   ,"solid_porous","solid_all"
         integer     :: prop_shell           !< "shell_isotropic","shell_orthotropic","shell_composite","shell_anisotropic","shell_all"
         integer     :: prop_beam            !< "beam_classic"   ,"beam_integrated"  ,"beam_all"
@@ -346,6 +349,7 @@
         integer     :: prop_sph             !< "sph"
         integer     :: compatibility_eos    !< "eos"
         integer     :: compatibility_visc   !< "visc"
+        integer     :: compatibility_therm  !< "therm"
 !        integer     :: compatibility_nloc   !< "nloc"
         ! --------------------------------- !<  
         integer     :: nloc                 !< non-local variable regularization flag
@@ -371,10 +375,11 @@
 !                
         type (fail_param_),dimension(:) ,allocatable :: fail     !< failure models data structure (nfail)
         type (visc_param_)                           :: visc     !< viscosity model data structure
+        type (therm_param_)                          :: therm    !< thermal model data structure (/heat/mat + /therm_stress)         
 
         type (multimat_param_) :: multimat                       !< buffer scpecific to multimaterial laws (51,151) : vfrac and mat internal identifiers
 
-         type (eos_param_)    :: eos                             !< eos model data structure (to be defined)
+         type (eos_param_)    :: eos                             !< eos model data structure
 !        type (therm_param_)  :: therm                           !< thermal model data structure (to be defined)           
 !        type (submat_)  ,dimension(:) ,allocatable :: submat    !< multi material data structure (to be defined) 
 

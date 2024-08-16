@@ -45,39 +45,54 @@ C-----------------------------------------------
       INTEGER IMAT
 C=======================================================================
       DO IMAT = 1,MAT_ELEM%NUMMAT
-        MAT_ELEM%MAT_PARAM(IMAT)%ILAW      = 0             ! material law number(type)
-        MAT_ELEM%MAT_PARAM(IMAT)%MAT_ID    = 0             ! material law ID
-        MAT_ELEM%MAT_PARAM(IMAT)%NUPARAM   = 0             ! number of real value material paraameters
-        MAT_ELEM%MAT_PARAM(IMAT)%NIPARAM   = 0             ! number of int value material parameters
-        MAT_ELEM%MAT_PARAM(IMAT)%NFUNC     = 0             ! number of local functions in material
-        MAT_ELEM%MAT_PARAM(IMAT)%NTABLE    = 0             ! number of local function tables
-        MAT_ELEM%MAT_PARAM(IMAT)%NSUBMAT   = 0             ! number of submaterials (multi-mat law51)
-        MAT_ELEM%MAT_PARAM(IMAT)%NFAIL     = 0             ! number of failure models
-        MAT_ELEM%MAT_PARAM(IMAT)%IVISC     = 0             ! viscosity model number
-        MAT_ELEM%MAT_PARAM(IMAT)%IEOS      = 0             ! eos model number
-        MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG = 0             ! therm model number
-c
+        MAT_ELEM%MAT_PARAM(IMAT)%ILAW      = 0           ! material law number(type)
+        MAT_ELEM%MAT_PARAM(IMAT)%MAT_ID    = 0           ! material law ID
+        MAT_ELEM%MAT_PARAM(IMAT)%NUPARAM   = 0           ! number of real value material paraameters
+        MAT_ELEM%MAT_PARAM(IMAT)%NIPARAM   = 0           ! number of int value material parameters
+        MAT_ELEM%MAT_PARAM(IMAT)%NFUNC     = 0           ! number of local functions in material
+        MAT_ELEM%MAT_PARAM(IMAT)%NTABLE    = 0           ! number of local function tables
+        MAT_ELEM%MAT_PARAM(IMAT)%NSUBMAT   = 0           ! number of submaterials (multi-mat law51)
+        MAT_ELEM%MAT_PARAM(IMAT)%NFAIL     = 0           ! number of failure models
+        MAT_ELEM%MAT_PARAM(IMAT)%IVISC     = 0           ! viscosity model number
+        MAT_ELEM%MAT_PARAM(IMAT)%IEOS      = 0           ! eos model number
+        MAT_ELEM%MAT_PARAM(IMAT)%ITHERM    = 0           ! thermal option flag
+        MAT_ELEM%MAT_PARAM(IMAT)%IEXPAN    = 0           ! thermal volumic expansion flag
+        MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG = 0           ! material heat calculation flag
+!
         MAT_ELEM%MAT_PARAM(IMAT)%COMPRESSIBILITY    = 3  ! elsto_plastic
         MAT_ELEM%MAT_PARAM(IMAT)%SMSTR              = 2  ! large strain
         MAT_ELEM%MAT_PARAM(IMAT)%STRAIN_FORMULATION = 1  ! incremental
         MAT_ELEM%MAT_PARAM(IMAT)%IPRES              = 1  ! hydrostatic using AMU
         MAT_ELEM%MAT_PARAM(IMAT)%ORTHOTROPY         = 1  ! isotropic
-c
+!
         MAT_ELEM%MAT_PARAM(IMAT)%NLOC         = 0
         MAT_ELEM%MAT_PARAM(IMAT)%IFAILWAVE    = 0
         MAT_ELEM%MAT_PARAM(IMAT)%IXFEM        = 0
-c
+!
         MAT_ELEM%MAT_PARAM(IMAT)%NMOD         = 0        ! Number of damage modes
-c
-c       initialize viscosity parameters
-c
+!
+!       initialize viscosity parameters
+!
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%ILAW    = 0
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%NUPARAM = 0
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%NIPARAM = 0
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%NUVAR   = 0
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%NFUNC   = 0
         MAT_ELEM%MAT_PARAM(IMAT)%VISC%NTABLE  = 0
-c
+!
+!       initialize thermal parameters
+!
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%IFORM       = 0
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%TREF        = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%TMELT       = INFINITY
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%RHOCP       = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%AS          = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%BS          = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%AL          = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%BL          = ZERO
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%func_thexp  = 0
+        MAT_ELEM%MAT_PARAM(IMAT)%THERM%scale_thexp = ZERO
+!
         ! Properties compatibility flags
         MAT_ELEM%MAT_PARAM(IMAT)%PROP_SOLID  = 0
         MAT_ELEM%MAT_PARAM(IMAT)%PROP_SHELL  = 0
@@ -85,7 +100,7 @@ c
         MAT_ELEM%MAT_PARAM(IMAT)%PROP_SPRING = 0
         MAT_ELEM%MAT_PARAM(IMAT)%PROP_TRUSS  = 0
         MAT_ELEM%MAT_PARAM(IMAT)%PROP_SPH    = 0       
-c
+!
         ! Options compatibility flags
         MAT_ELEM%MAT_PARAM(IMAT)%COMPATIBILITY_EOS = 0
 c
@@ -99,8 +114,8 @@ c
         MAT_ELEM%MAT_PARAM(IMAT)%STIFF_CONTACT = ZERO
         MAT_ELEM%MAT_PARAM(IMAT)%STIFF_HGLASS  = ZERO
         MAT_ELEM%MAT_PARAM(IMAT)%STIFF_TSTEP   = ZERO
-c        
+!
       END DO
-c-----------
+!-----------
       RETURN
       END 

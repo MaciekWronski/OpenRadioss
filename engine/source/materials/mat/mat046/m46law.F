@@ -31,7 +31,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    ale_mod          ../common_source/modules/ale/ale_mod.F
       !||    glob_therm_mod   ../common_source/modules/mat_elem/glob_therm_mod.F90
       !||====================================================================
-      SUBROUTINE M46LAW(
+      SUBROUTINE M46LAW(MAT_PARAM,
      1   LFT,     LLT,     NFT,     MTN,
      2   PM,      OFF,     SIG,     EINT,
      3   RHO,     QOLD,    VOL,     UVAR,
@@ -54,6 +54,7 @@ C   I m p l i c i t   T y p e s
 C-----------------------------------------------
       USE ALE_MOD
       use glob_therm_mod
+      USE MATPARAM_DEF_MOD
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -92,6 +93,7 @@ C-----------------------------------------------
      .         RHOREF(*)  ,RHOSP(*)  
       my_real, DIMENSION(MVSIZ,6), INTENT(INOUT) :: SVIS
       type (glob_therm_) ,intent(inout) :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -166,14 +168,14 @@ C-------------------------------------------
 C   BULK VISCOSITY AND TIME STEP COMPUTATION
 C   THIS SUBROUTINE RETURN THE NEW BULK VISCOSITY Q
 C-----------------------
-      CALL MQVISCB(
+      CALL MQVISCB(MAT_PARAM,
      1   PM,      OFF,     RHO,     BID1,
      2   BID2,    SSP,     BID3,    STIFN,
      3   DT2T,    NELTST,  ITYPTST, AIRE,
      4   OFFG,    GEO,     PID,     VOLN,
      5   VD2,     DELTAX,  VIS,     D1,
      6   D2,      D3,      PNEW,    PSH,
-     7   MAT,     NGL,     Q,       SSP_EQ,
+     7   MAT(1),  NGL,     Q,       SSP_EQ,
      8   VOL,     MSSA,    DMELS,   IBID,
      9   FACQ0,   CONDE,   DTEL,    G_DT,
      A   IPM,     RHOREF,  RHOSP,   NEL,

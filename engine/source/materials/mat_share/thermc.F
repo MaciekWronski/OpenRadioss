@@ -28,59 +28,74 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    czforc3       ../engine/source/elements/shell/coquez/czforc3.F
       !||    czforc3_crk   ../engine/source/elements/xfem/czforc3_crk.F
       !||====================================================================
-      SUBROUTINE THERMC(JFT  ,JLT   ,PM   ,MAT   ,THK   ,IXC , 
-     2                  PX1  ,PX2   ,PY1  ,PY2   ,AREA  ,DT1C ,
-     3                  TEMPNC ,TEMPEL   ,DIE  ,FPHI    ,THEACCFACT)
+      SUBROUTINE THERMC(NEL    ,THERM ,THK   , 
+     &                  PX1    ,PX2   ,PY1   ,PY2   ,AREA      ,timestep  ,
+     &                  TEMPN  ,TEMPEL,DHEAT ,FPHI  ,THEACCFACT,
+     &                  IX     ,NIX   ,NUMEL ,NUMNOD,MVSIZ )
+C-----------------------------------------------
+C    calculates nodal thermic force from heat energy increment
+C-----------------------------------------------
+C    M o d u l e s
+C-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
 #include      "implicit_f.inc"
 C-----------------------------------------------
-C   G l o b a l   P a r a m e t e r s
-C-----------------------------------------------
-#include      "mvsiz_p.inc"
-#include      "param_c.inc"
-C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
-      INTEGER JFT, JLT,MAT(*),IXC(NIXC,*)
-      my_real ,INTENT(IN) :: THEACCFACT
-      my_real
-     .   AREA(*), PX1(*), PX2(*), PY1(*), PY2(*),
-     .   TEMPNC(*), FPHI(MVSIZ,4), PM(NPROPM,*),DIE(*),
-     .   DT1C(*), THK(*),TEMPEL(*)
+      integer ,intent(in)  :: NEL
+      integer ,intent(in)  :: NUMNOD
+      integer ,intent(in)  :: NIX
+      integer ,intent(in)  :: NUMEL
+      integer ,intent(in)  :: MVSIZ
+      integer ,intent(in)  :: IX(NIX,NUMEL)
+      my_real ,intent(in)  :: THEACCFACT
+      my_real ,intent(in)  :: timestep
+      my_real ,intent(out) :: FPHI(MVSIZ,4)
+      my_real ,DIMENSION(NUMNOD) ,intent(in) :: TEMPN
+      my_real ,DIMENSION(NEL)    ,intent(in) :: TEMPEL
+      my_real ,DIMENSION(NEL)    ,intent(in) :: AREA
+      my_real ,DIMENSION(NEL)    ,intent(in) :: PX1
+      my_real ,DIMENSION(NEL)    ,intent(in) :: PX2
+      my_real ,DIMENSION(NEL)    ,intent(in) :: PY1
+      my_real ,DIMENSION(NEL)    ,intent(in) :: PY2
+      my_real ,DIMENSION(NEL)    ,intent(in) :: DHEAT
+      my_real ,DIMENSION(NEL)    ,intent(in) :: THK
+      type (therm_param_)        ,intent(in) :: therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I, J,MX
-      my_real :: CA,CB ,KC ,PHIX,PHIY,A
-!=======================================================================
-        MX  =MAT(JFT)
-        CA = PM(75,MX)
-        CB = PM(76,MX)
+      INTEGER :: I,N1,N2,N3,N4
+      my_real :: AS,BS,A,KC,PHIX,PHIY
+C-----------------------------------------------
+      AS = THERM%AS
+      BS = THERM%BS
 !
-        DO I=JFT,JLT
-C 
-C - flux
-C      
-          KC = (CA + CB*TEMPEL(I))*DT1C(I)/MAX(EM20,AREA(I))*THEACCFACT
-          PHIX =  TEMPNC(IXC(2,I))*PX1(I) + TEMPNC(IXC(3,I))*PX2(I)  -
-     .            TEMPNC(IXC(4,I))*PX1(I) - TEMPNC(IXC(5,I))*PX2(I)
-          
-          PHIY =  TEMPNC(IXC(2,I))*PY1(I) + TEMPNC(IXC(3,I))*PY2(I)  -
-     .            TEMPNC(IXC(4,I))*PY1(I) - TEMPNC(IXC(5,I))*PY2(I)
+      DO I=1,NEL
+        KC = (AS + BS*TEMPEL(I))*timestep*THEACCFACT / MAX(EM20,AREA(I))
+        N1 = IX(2,I)
+        N2 = IX(3,I)
+        N3 = IX(4,I)
+        N4 = IX(5,I)
+        !     
+        ! thermal flux : K gradT = B * T
+        !     
+        PHIX = TEMPN(N1)*PX1(I)+TEMPN(N2)*PX2(I)-TEMPN(N3)*PX1(I)-TEMPN(N4)*PX2(I)
+        PHIY = TEMPN(N1)*PY1(I)+TEMPN(N2)*PY2(I)-TEMPN(N3)*PY1(I)-TEMPN(N4)*PY2(I)
 C     
-          PHIX = KC*PHIX*THK(I)
-          PHIY = KC*PHIY*THK(I)
-C
-C         nodal thermal force
-C
-          A = FOURTH * DIE(I)
-          FPHI(I,1) = A - (PHIX*PX1(I) + PHIY*PY1(I))
-          FPHI(I,2) = A - (PHIX*PX2(I) + PHIY*PY2(I))
-          FPHI(I,3) = A + (PHIX*PX1(I) + PHIY*PY1(I))
-          FPHI(I,4) = A + (PHIX*PX2(I) + PHIY*PY2(I))
-       ENDDO
-C 
+        PHIX = KC*PHIX*THK(I)
+        PHIY = KC*PHIY*THK(I)
+        !     
+        ! nodal thermal force
+        !     
+        A = FOURTH * DHEAT(I)
+        FPHI(I,1) = A - (PHIX*PX1(I) + PHIY*PY1(I))
+        FPHI(I,2) = A - (PHIX*PX2(I) + PHIY*PY2(I))
+        FPHI(I,3) = A + (PHIX*PX1(I) + PHIY*PY1(I))
+        FPHI(I,4) = A + (PHIX*PX2(I) + PHIY*PY2(I))
+      ENDDO
+!-----------
       RETURN
       END

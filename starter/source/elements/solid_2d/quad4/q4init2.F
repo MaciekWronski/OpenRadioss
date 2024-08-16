@@ -49,7 +49,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      4                  NEL         ,SKEW     ,MSQ          ,IPART      ,IPARTQ,
      5                  IPM         ,NSIGS    ,WMA          ,PTQUAD     ,BUFMAT,
      6                  NPF         ,TF       ,IPARGG       ,ILOADP     ,FACLOAD,
-     7                  PARTSAV     ,V        )
+     7                  PARTSAV     ,V        ,MAT_PARAM    )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -58,6 +58,7 @@ C-----------------------------------------------
       USE DETONATORS_MOD
       USE ALE_CONNECTIVITY_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD          
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -89,6 +90,8 @@ C-----------------------------------------------
       my_real,INTENT(IN) :: FACLOAD(LFACLOAD,*)
       TYPE(DETONATORS_STRUCT_) :: DETONATORS
       TYPE(t_ale_connectivity), INTENT(INOUT) :: ALE_CONNECTIVITY
+      TYPE (MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
+C-----------------------------------------------
 C-----------------------------------------------
 C FUNCTION:
 C ARGUMENTS:  (I: input, O: output, IO: input & output, W: workspace)
@@ -117,7 +120,7 @@ C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ)
       INTEGER NF1, IELVS, IX, I, IGTYP, IHBE, IP
-      INTEGER IR,IS,NPTR,NPTS,IBID, IPID1
+      INTEGER IR,IS,NPTR,NPTS,IBID, IPID1,IMAT
       my_real
      +   X1(MVSIZ), X2(MVSIZ), X3(MVSIZ), X4(MVSIZ),
      +   Y1(MVSIZ),Y2(MVSIZ),Y3(MVSIZ),Y4(MVSIZ),
@@ -208,7 +211,7 @@ C=======================================================================
       MBUF => ELBUF_STR%BUFLY(1)%MAT(1,1,1)
 c
       IGTYP = IPARG(38)
-      IHBE = IPARG(23)
+      IHBE  = IPARG(23)
       JCVT  = IPARG(37)
 !
       ISORTH = 0
@@ -216,6 +219,7 @@ c
       BID = ZERO
 C
       NF1 = NFT+1
+            
       IF(JCVT==0)THEN
         CALL QCOOR2(X,IXQ(1,NF1),NGL,MAT, 
      .        PID, IX1, IX2, IX3, IX4, 
@@ -233,6 +237,8 @@ C
      .        SY,SZ,TY,TZ, 
      .        E1Y, E1Z, E2Y, E2Z)
       ENDIF
+!
+      IMAT = MAT(1)
 C
       IF (IGTYP == 6) CALL QMORTH2(PID  ,GEO  ,IGEO ,GBUF%GAMA, NEL,
      .                   SY   ,SZ   ,TY   ,TZ  ,
@@ -320,7 +326,10 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE ET TURBULENCE
 C----------------------------------------
-      IF(JTHE/=0)CALL ATHERI(MAT ,PM  ,LBUF%TEMP)
+      IF (JTHE/=0) THEN
+!        LBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%T0
+        LBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
       IF(JTUR/=0)CALL ATURI2(IPARGG   ,LBUF%RHO,PM,IXQ,X,
      .                         LBUF%RK  ,LBUF%RE, AREA)
 C------------------------------------------
@@ -334,7 +343,7 @@ C      CALCUL DES DT ELEMENTAIRES
 C-------------------------------------------
        CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,GBUF%RE ,BUFMAT, DELTAX, AREA, 
-     .     GBUF%VOL, DTX, IGEO,IGTYP)
+     .     GBUF%VOL, DTX, IGEO,IGTYP,MAT_PARAM(MAT(1)))
        DO 10 I=LFT,LLT
         IF(IXQ(6,I+NFT)/=0) THEN
           IF(IGTYP/=0 .AND. IGTYP/=6 .AND.

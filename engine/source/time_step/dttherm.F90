@@ -50,13 +50,15 @@
       !||    constant_mod     ../common_source/modules/constant_mod.F
       !||    glob_therm_mod   ../common_source/modules/mat_elem/glob_therm_mod.F90
       !||====================================================================
-      subroutine dttherm(nel     ,pm      ,npropm  ,glob_therm,            &
-                         jtur    ,tempel  ,vol0    ,rho       ,            &
-                         lc      ,off     ,conde   ,re        ,rk      )
+      subroutine dttherm (glob_therm   ,therm   ,temp   ,                  &   
+                         nel   ,jtur   ,a11     ,tmu    ,rpr    ,          &
+                         vol0  ,rho    ,aldt    ,off    ,conde  ,          &
+                         re    ,rk     )                              
 ! ----------------------------------------------------------------------------------------------------------------------
 !                                                   Modules
 ! ----------------------------------------------------------------------------------------------------------------------
           use glob_therm_mod
+          use therm_param_mod
           use constant_mod  , only : one, half, four,em15,em20
 ! ----------------------------------------------------------------------------------------------------------------------
 !                                                   Implicit none
@@ -68,46 +70,46 @@
 !                                                   Arguments
 ! ----------------------------------------------------------------------------------------------------------------------
       integer ,intent(in)        :: nel
-      integer ,intent(in)        :: npropm
       integer ,intent(in)        :: jtur
-      my_real ,dimension(nel)    :: tempel
-      my_real ,dimension(nel)    :: lc
+      my_real, intent(in)        :: a11
+      my_real, intent(in)        :: tmu
+      my_real, intent(in)        :: rpr
+      my_real ,dimension(nel)    :: temp
+      my_real ,dimension(nel)    :: aldt
       my_real ,dimension(nel)    :: off
       my_real ,dimension(nel)    :: vol0
       my_real ,dimension(nel)    :: rho
       my_real ,dimension(nel)    :: rk
       my_real ,dimension(nel)    :: re
       my_real ,dimension(nel)    :: conde
-      my_real ,dimension(npropm) :: pm
       type (glob_therm_) ,intent(inout) :: glob_therm
+      type(therm_param_) ,intent(in)    :: therm
 !-----------------------------------------------
 !   L o c a l   V a r i a b l e s
 !-----------------------------------------------
       integer :: i
-      my_real :: rhocp,as,bs,al,bl,tmelt,akk,xmu,tmu,atu,dt,lc2,rpr
+      my_real :: rhocp,as,bs,al,bl,tmelt,akk,xmu,atu,dt,lc2
 !=======================================================================
-      rhocp = pm(69)
-      as    = pm(75)
-      bs    = pm(76)
-      al    = pm(77)
-      bl    = pm(78)
-      tmelt = pm(80)
+      rhocp = therm%rhocp
+      as    = therm%as
+      bs    = therm%bs
+      al    = therm%al
+      bl    = therm%bl
+      tmelt = therm%tmelt
 !
       do i=1,nel
-        if (tempel(i) < tmelt) then
-          akk = as + bs*tempel(i)
+        if (temp(i) < tmelt) then
+          akk = as + bs*temp(i)
         else
-          akk = al + bl*tempel(i)
+          akk = al + bl*temp(i)
         endif
         if (jtur /= 0) then
-          xmu = pm(24)*rho(i)
-          tmu = pm(81)
-          rpr = pm(95)
-          atu = rpr*tmu*rk(i)*rk(i) / (max(em15,re(I)*vol0(I))*xmu)
+          xmu = rho(i)*a11
+          atu = rpr*tmu*rk(i)*rk(i)/(max(em15,re(i)*vol0(i))*xmu)
           akk = akk*(one+atu)
         endif
         akk = akk*glob_therm%theaccfact
-        lc2 = lc(i)*lc(i)
+        lc2 = aldt(i)*aldt(i)
         dt  = glob_therm%dtfactherm * half*lc2*rhocp/max(akk,em20)
         if (dt < glob_therm%dt_therm)  glob_therm%dt_therm = dt
         conde(i) = four*vol0(i)*akk/lc2  

@@ -162,7 +162,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,IGTYP,ICSEN,IXLAY,NXLAY,NLAYER,IFLAG,IUN,NPG,NPTT,IBID,
-     .   IR,IS,IT,IPT,NG,L_DIRA,L_DIRB,J1,J2,ILEV,IGMAT,IPTHK,IREP,
+     .   IR,IS,IT,IPT,NG,L_DIRA,L_DIRB,J1,J2,ILEV,IGMAT,IPTHK,IREP,IMAT,
      .   ACTIFXFEM,SEDRAPE,NUMEL_DRAPE
       INTEGER MAT(MVSIZ),PID(MVSIZ),NDT(MVSIZ),NGL(MVSIZ),FWAVE(MVSIZ)
 C
@@ -561,17 +561,20 @@ C----------------------------
 C-------------------------
 c     Thermique des coques 
 C--------------------------
-        IF (JTHE /= 0) THEN
-          IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
-            CALL THERMC(JFT   ,JLT   ,PM     ,MAT     ,THK0  ,IXC     ,
-     .                  PX1   ,PX2   ,PY1    ,PY2     ,AREA  ,DT1C    ,
-     .                  TEMP  ,TEMPEL,FHEAT  ,THEM    ,GLOB_THERM%THEACCFACT) 
-          ELSE
-            CALL THERMC(JFT   ,JLT   ,PM     ,MAT     ,THK0  ,IXC     ,
-     .                  PX1   ,PX2   ,PY1    ,PY2     ,AREA  ,DT1C    ,
-     .                  TEMP  ,TEMPEL,DIE    ,THEM    ,GLOB_THERM%THEACCFACT) 
-          END IF
-        ENDIF
+      IF (JTHE /= 0) THEN
+        IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
+          IMAT = MAT(1)
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,FHEAT ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        ELSE
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                PX1   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,DIE   ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        END IF
+      ENDIF
 C--------------------------
 C     THERMAL TIME STEP       --- to be added --- (see cforc3.F)
 C--------------------------

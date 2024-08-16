@@ -63,11 +63,11 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||====================================================================
       SUBROUTINE DTMAIN(GEO  ,PM   ,IPM   ,PID   ,MAT   ,FV    ,
      .                  EINT ,TEMP ,DELTAX,RK    ,RE    ,BUFMAT, DDELTAX, AIRE, VOL, DTX,
-     .                  IGEO ,IGTYP)
+     .                  IGEO ,IGTYP,MAT_PARAM)
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
-      USE ELBUFDEF_MOD            
+      USE MATPARAM_DEF_MOD          
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -86,10 +86,14 @@ C-----------------------------------------------
       my_real             :: PM(*),GEO(*),FV,EINT(*),TEMP(*),DELTAX(*),RK(*),RE(*), DDELTAX(*),
      .     AIRE(*), VOL(*), DTX(*)
       my_real, INTENT(IN) :: BUFMAT(*)
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT)  :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s 
 C-----------------------------------------------
+      INTEGER :: IMAT
 C=======================================================================
+      IMAT = MAT(1)
+
       SELECT CASE(MTN)
 c
       CASE (1,2,13,22,28,29,30,31,33,35)
@@ -112,7 +116,7 @@ c
       CASE (16)
         CALL DT16LAW(PM,GEO,PID,MAT, DDELTAX, AIRE, VOL, DTX)
       CASE (18)
-        CALL DT18LAW(PM,IPM,MAT,EINT,TEMP,DELTAX, DTX)
+        CALL DT18LAW(MAT_PARAM,PM,IPM,IMAT,EINT,TEMP,DELTAX, DTX)
       CASE (21)
         CALL DT21LAW(PM,GEO,PID,MAT, DDELTAX, AIRE, VOL, DTX)
       CASE (25)

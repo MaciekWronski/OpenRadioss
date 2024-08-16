@@ -38,7 +38,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       SUBROUTINE HM_READ_MAT103(UPARAM ,MAXUPARAM,NUPARAM  ,FSMOOTH   , IMATVIS  ,
      .                          NUVAR  ,IFUNC    ,MAXFUNC  ,NFUNC    , PARMAT   , 
      .                          UNITAB ,MAT_ID   ,TITR     ,MTAG     , LSUBMODEL,
-     .                          PM     ,IPM      ,MATPARAM )
+     .                          PM     ,IPM      ,MAT_PARAM )
 C-----------------------------------------------
 C   D e s c r i p t i o n
 C-----------------------------------------------
@@ -87,13 +87,13 @@ C-----------------------------------------------
       INTEGER,INTENT(IN)              :: MAT_ID
       CHARACTER(LEN=NCHARTITLE) ,INTENT(IN) :: TITR
       TYPE(SUBMODEL_DATA),INTENT(IN)  :: LSUBMODEL(*)
-      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MATPARAM
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
        INTEGER ILAW
        my_real 
-     .  E, NU, G, A0, FCUT, EPS0, PMIN, RCP, TINI, ETA, BULK,
+     .  E, NU, G, A0, FCUT, EPS0, PMIN, RHOCP, TINI, ETA, BULK,
      .  M1, M2, M3, M4, M5, M7,RHO0,RHOR
        LOGICAL IS_AVAILABLE,IS_ENCRYPTED
 C-----------------------------------------------
@@ -126,7 +126,7 @@ C-----------------------------------------------
       CALL HM_GET_FLOATV('MAT_SRP'   , EPS0     ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT_PC'    , PMIN     ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       !line-5 
-      CALL HM_GET_FLOATV('MAT_SPHEAT'  ,RCP   ,IS_AVAILABLE, LSUBMODEL, UNITAB)      
+      CALL HM_GET_FLOATV('MAT_SPHEAT'  ,RHOCP   ,IS_AVAILABLE, LSUBMODEL, UNITAB)      
       CALL HM_GET_FLOATV('MAT_T0'    ,TINI  ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT103_ETA',ETA  ,IS_AVAILABLE, LSUBMODEL, UNITAB)
 
@@ -134,7 +134,7 @@ C-----------------------------------------------
 C     DEFAULTS   
 C----------------------------------------------- 
       IF(PMIN == ZERO) PMIN=-INFINITY
-      IF(RCP  == ZERO) RCP = INFINITY 
+      IF(RHOCP  == ZERO) RHOCP = INFINITY 
       IF(RHOR==ZERO)RHOR=RHO0
       PM(1) =RHOR
       PM(89)=RHO0
@@ -164,7 +164,7 @@ C-----------------------------------------------
       UPARAM(7) = M4
       UPARAM(8) = M5
       UPARAM(9) = M7
-      UPARAM(10) = RCP
+      UPARAM(10) = RHOCP
       UPARAM(11) = TINI
       UPARAM(12) = ETA
       UPARAM(13) = 273.15
@@ -180,8 +180,9 @@ C
       PARMAT(5) = FCUT
       PM(32) = BULK
       PM(37) = PMIN
-      PM(69) = RCP
+      PM(69) = RHOCP
       PM(100)= BULK
+!---------------------------------------------------------   
 C   flag activation   
       MTAG%G_TEMP = 1  ! 
       MTAG%L_TEMP = 1
@@ -190,21 +191,27 @@ C   flag activation
       MTAG%G_PLA  = 1
       MTAG%L_PLA  = 1
 !---------------------------------------------------------   
+!      
+      MAT_PARAM%RHO         = RHOR
+      MAT_PARAM%RHO0        = RHO0
+      MAT_PARAM%THERM%TREF  = TINI
+      MAT_PARAM%THERM%RHOCP = RHOCP
+!      
       !MATPARAM keywords
       
-      MATPARAM%IEOS = 18  ! Linear EOS is used by default 
+      MAT_PARAM%IEOS = 18  ! Linear EOS is used by default 
       
 !---------------------------------------------------------   
 
       ! Material compatibility with /EOS option
-      CALL INIT_MAT_KEYWORD(MATPARAM,"EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"EOS")
 
       ! EOS/Thermo keyword for pressure treatment in elements
-      CALL INIT_MAT_KEYWORD(MATPARAM,"HYDRO_EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"HYDRO_EOS")
 
       ! Properties compatibility
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SOLID_ISOTROPIC")
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SPH")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SOLID_ISOTROPIC")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SPH")
 C------------------------------------------------- 
 C     LISTING OUTPUT 
 C------------------------------------------------- 
@@ -215,7 +222,7 @@ C-------------------------------------------------
       ELSE
         WRITE(IOUT,1020)RHO0,RHOR
         WRITE(IOUT,1100) E, NU, A0, M1, M2, M3, M4, M5, M7
-        WRITE(IOUT,1200) FSMOOTH, FCUT, EPS0, PMIN, RCP, TINI, ETA
+        WRITE(IOUT,1200) FSMOOTH, FCUT, EPS0, PMIN, RHOCP, TINI, ETA
       ENDIF
 C
  1000 FORMAT(

@@ -176,6 +176,9 @@ c--------------------------------------------------
             CALL ANCMSG(MSGID=765, MSGTYPE=MSGWARNING, ANMODE=ANINFO_BLIND_1,
      .                  I1=MAT_ID, C3=TITR, I2=MAT_ID, I3=MAT_ID)
           ENDIF
+          IF (RHO_CP == ZERO) RHO_CP = PM(69,IMAT)  ! MAT_PARAM(IMAT)%THERM%RHOCP
+          IF (TREF   == ZERO) TREF   = PM(79,IMAT)  ! MAT_PARAM(IMAT)%THERM%T0
+          IF (TMELT  == ZERO) TMELT  = PM(80,IMAT)  ! MAT_PARAM(IMAT)%THERM%TMELT
 c--------------------------------------------------
 c       Specific Case : law73
 c--------------------------------------------------
@@ -248,10 +251,20 @@ c--------------------------------------------------
         PM(79,IMAT) = TREF                                             
         PM(80,IMAT) = TMELT
         PM(90,IMAT) = EFRAC
+        
+        MAT_PARAM(IMAT)%ITHERM      = 1         ! jthe
+        MAT_PARAM(IMAT)%THERM%RHOCP = RHO_CP
+        MAT_PARAM(IMAT)%THERM%TREF  = TREF
+        MAT_PARAM(IMAT)%THERM%TMELT = TMELT
+        MAT_PARAM(IMAT)%THERM%AS    = AS
+        MAT_PARAM(IMAT)%THERM%BS    = BS
+        MAT_PARAM(IMAT)%THERM%AL    = AL
+        MAT_PARAM(IMAT)%THERM%BL    = BL
+        MAT_PARAM(IMAT)%THERM%EFRAC = EFRAC
 c--------------------------------------------------
 c       Output
 c--------------------------------------------------
-        WRITE(IOUT,2000) MAT_ID,TREF,RHO_CP,AS,BS,TMELT,AL,BL,EFRAC
+        WRITE(IOUT,2000) MAT_ID,TREF,TMELT,RHO_CP,AS,BS,AL,BL,EFRAC
 C        
       ENDDO   ! I = 1,NTHERM     
 
@@ -260,11 +273,11 @@ c-----------------------------------------
      & 5X,'    THERMAL PARAMETERS  ',/,
      & 5X,'    ------------------  ',/,
      & 5X,'MATERIAL NUMBER . . . . . . . . . . . . . . . =',I10/,
-     & 5X,'T0 (INITIAL TEMPERATURE). . . . . . . . . . . =',1PG20.13/,
+     & 5X,'T0 (REFERENCE TEMPERATURE). . . . . . . . . . =',1PG20.13/,
+     & 5X,'TMELT (MELTING TEMPERATURE) . . . . . . . . . =',1PG20.13/,
      & 5X,'SPECIFIC HEAT . . . . . . . . . . . . . . . . =',1PG20.13/,
      & 5X,'AS (SOLID PHASE). . . . . . . . . . . . . . . =',1PG20.13/,
      & 5X,'BS (SOLID PHASE). . . . . . . . . . . . . . . =',1PG20.13/,
-     & 5X,'T1 (MELTING TEMPERATURE). . . . . . . . . . . =',1PG20.13/,
      & 5X,'AL (LIQUID PHASE) . . . . . . . . . . . . . . =',1PG20.13/,
      & 5X,'BL (LIQUID PHASE) . . . . . . . . . . . . . . =',1PG20.13/,
      & 5X,'FRACTION OF STRAIN ENERGY CONVERTED INTO HEAT =',1PG20.13/)

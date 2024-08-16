@@ -114,7 +114,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,NF1,IBID,IGTYP,IP,IR,IS,IT,IL,NLAY,NPTR,NPTS,NPTT,NCC,
-     .     JHBE,IREP,MPT,NUVAR,NUVARR,IDEF,NREFSTA,
+     .     JHBE,IREP,MPT,NUVAR,NUVARR,IDEF,NREFSTA,IMAT,
      .     IPTHK, IPPOS,IG,IM,MTN0,ICSTR,IPID1,L_PLA,L_SIGB
       INTEGER PID(MVSIZ), NGL(MVSIZ),MAT(MVSIZ), MAT0(MVSIZ),
      .     IX1(MVSIZ), IX2(MVSIZ), IX3(MVSIZ), IX4(MVSIZ),
@@ -229,6 +229,7 @@ c
       JHBE  = IPARG(23)
       IREP  = IPARG(35)
       IGTYP = IPARG(38)
+      IMAT  = IXS(1,NFT+1)
       IF (JCVT==1.AND.ISORTH/=0) JCVT=2
 C
       NF1=NFT+1
@@ -236,8 +237,8 @@ C
       ICSTR=IPARG(17)
 C
       DO I=1,NEL
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) =MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) =MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
       
       IF (JCVT == 0) THEN
@@ -324,7 +325,10 @@ C
       CALL SCZERO3(GBUF%RHO,GBUF%SIG,GBUF%EINT,NEL)
 C
 C Thermal initialization
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE/=0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C
       NLAY = ELBUF_STR%NLAY
       NPTR = ELBUF_STR%NPTR
@@ -429,7 +433,7 @@ C
             AIRE(:) = ZERO
             CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .           LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .           VOLU, DTX,IGEO,IGTYP)
+     .           VOLU, DTX,IGEO,IGTYP,MAT_PARAM(IMAT))
 C Average density, stresses, ...
             CALL SVALUE0(
      .           LBUF%RHO,LBUF%VOL,LBUF%OFF,LBUF%SIG,LBUF%EINT,DTX,       
@@ -480,7 +484,7 @@ C Element time step
         AIRE(:) = ZERO
         CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .       LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .       VOLU, DTX,IGEO,IGTYP)
+     .       VOLU, DTX,IGEO,IGTYP,MAT_PARAM(IMAT))
 c
        IF (IGTYP == 22) THEN
          DO I=1,NEL

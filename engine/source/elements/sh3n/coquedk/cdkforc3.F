@@ -150,7 +150,7 @@ C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
 c  indx utilise localement contrairement aux coques 4n 
       INTEGER MAT(MVSIZ),PID(MVSIZ),NGL(MVSIZ),INDX(MVSIZ),FWAVE_EL(NEL),
-     .   IFLAG,LENF,LENM,LENS,IR,IS,IT,IPT,NPTT,N1,N2,N3,
+     .   IFLAG,LENF,LENM,LENS,IR,IS,IT,IPT,NPTT,N1,N2,N3,IMAT,
      .   I,II,J,JJ,NG,NPG,NNOD,NPTR,NPTS,NLAY,L_DIRA,L_DIRB,IFAILWAVE,
      .   PT0,PT1,PT2,PT3,PTF,PTM,PTE,PTEP,PTS,IGTYP,IBID,J1,J2,
      .   IGMAT,ILAY,NPTTOT,IREP,KK(5),K,IDRAPE,ACTIFXFEM,SEDRAPE,NUMEL_DRAPE
@@ -191,6 +191,7 @@ c  indx utilise localement contrairement aux coques 4n
      .  DIMENSION(:) ,POINTER  :: DIR_A,DIR_B,CRKDIR,DADV
 !     variables for heat transfer
       my_real, dimension(mvsiz) :: fheat
+      my_real :: TMU,RPR
 !
 C--- Variables pour le non-local
       INTEGER :: NDDL, INOD(3),NC1(MVSIZ), NC2(MVSIZ), NC3(MVSIZ), L_NLOC, IPOS(3),INLOC
@@ -522,11 +523,15 @@ C--------------------------
 C--------------------------
 C     THERMAL TIME STEP
 C--------------------------
-        IF (JTHE /= 0 .AND. GLOB_THERM%IDT_THERM == 1) THEN
-           call dttherm(nel     ,pm(1,mat(1))  ,npropm  ,glob_therm   ,
-     .                  jtur    ,tempel  ,vol0    ,rho       ,
-     .                  aldt    ,off     ,conde   ,gbuf%re   ,gbuf%rk )
-         ENDIF
+      IF (JTHE /= 0 .AND. GLOB_THERM%IDT_THERM == 1) THEN
+        IMAT= MAT(1)
+        TMU = PM(81,IMAT)
+        RPR = PM(95,IMAT) 
+        call dttherm(glob_therm,mat_elem%mat_param(imat)%therm,tempel  ,
+     .               nel       ,jtur     ,a11(1)    ,tmu     ,rpr     ,
+     .               vol0      ,rho       ,aldt     ,off     ,conde   ,
+     .               gbuf%re   ,gbuf%rk   )
+      ENDIF
 C--------------------------
 C     NON-LOCAL TIME STEP
       IF (INLOC > 0) THEN

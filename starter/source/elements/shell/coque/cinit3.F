@@ -293,7 +293,7 @@ C------------
      .            BID    ,BID            ,ISUBSTACK ,NLAY  ,ELBUF_STR,
      .            STACK  ,GBUF%THK_I     ,RNOISE    ,DRAPE   ,GLOB_THERM%NINTEMP,
      .            PERTURB,IX1            ,IX2       ,IX3     ,IX4       ,
-     .            IDRAPE ,DRAPEG%INDX)
+     .            IDRAPE ,DRAPEG%INDX    ,MAT_PARAM )
 C-----------------------------------------------
       CALL CDERII(PX1G,PX2G,PY1G,PY2G,
      .            X1  ,X2  ,X3  ,X4  ,Y1  ,Y2  , 

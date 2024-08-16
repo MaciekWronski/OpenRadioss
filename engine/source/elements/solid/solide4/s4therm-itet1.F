@@ -25,9 +25,15 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||--- called by ------------------------------------------------------
       !||    s10forc3        ../engine/source/elements/solid/solide10/s10forc3.F
       !||====================================================================
-      SUBROUTINE S4THERM_ITET1(PM   ,IMAT  ,NC   ,NEL  ,
+      SUBROUTINE S4THERM_ITET1(THERM,NC   ,NEL  ,
      .                         XX   ,YY   ,ZZ   ,DT1  ,HEAT ,
      .                         TEMP ,FPHI ,OFFG ,OFF  ,THEACCFACT)
+C-----------------------------------------------
+C     calculates nodal thermic force from heat energy increment
+C-----------------------------------------------
+C     M o d u l e s
+C-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -41,13 +47,13 @@ C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
       INTEGER NEL, NC(MVSIZ,10)
-      INTEGER, INTENT(IN) :: IMAT
       my_real, INTENT(IN) :: THEACCFACT
       my_real, INTENT(IN) :: DT1 
-      my_real :: TEMP(*), HEAT(*), FPHI(MVSIZ,10), PM(NPROPM,*), 
-     .    OFF(*), OFFG(*)
+      my_real :: HEAT(MVSIZ), FPHI(MVSIZ,10)
+      my_real :: TEMP(NEL),OFF(NEL),OFFG(NEL)
       DOUBLE PRECISION
      .    XX(MVSIZ,10), YY(MVSIZ,10), ZZ(MVSIZ,10)
+      type (therm_param_) ,intent(in) :: therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -64,10 +70,9 @@ C-----------------------------------------------
       my_real
      .   X41, Y41, Z41, X42, Y42, Z42, X43, Y43, Z43
       my_real
-     .  CA, CB, KC, PHIX, PHIY, PHIZ, A, D,
+     .  AS,BS, KC, PHIX, PHIY, PHIZ, A, D,
      .  TEMP1, TEMP2, TEMP3, TEMP4, TEMPEL
-C
-C---+----1
+!===========================================================================
       DO I=1,NEL
        X43 = XX(I,4) - XX(I,3)
        Y43 = YY(I,4) - YY(I,3)
@@ -114,9 +119,9 @@ C---+----1
         PZ4(I)=-D4(I)*D
       ENDDO
 
-C---+----1
-      CA = PM(75,IMAT)
-      CB = PM(76,IMAT)
+C
+      AS = THERM%AS
+      BS = THERM%BS
 C
       DO I=1,NEL
          IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
@@ -132,7 +137,7 @@ C
          PHIZ =  TEMP1*PZ1(I) + TEMP2*PZ2(I) + TEMP3*PZ3(I) + TEMP4*PZ4(I)        
 C
          TEMPEL = FOURTH * (TEMP1 + TEMP2 + TEMP3 + TEMP4)
-         KC = (CA + CB*TEMPEL)*DT1*DET(I)*THEACCFACT
+         KC = (AS + BS*TEMPEL)*DT1*DET(I)*THEACCFACT
          PHIX = KC*PHIX
          PHIY = KC*PHIY
          PHIZ = KC*PHIZ

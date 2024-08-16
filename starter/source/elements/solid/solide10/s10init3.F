@@ -115,7 +115,7 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I,IP,NF1,NF2,IBID,IGTYP,NUVAR,IREP,NCC,IDEF,JHBE,IPID
+      INTEGER I,IP,NF1,NF2,IBID,IGTYP,NUVAR,IREP,NCC,IDEF,JHBE,IPID,IMAT
       INTEGER ID,NPTR,NPTS,NPTT,NLAY,L_PLA,L_SIGB,IBOLTP,IINT,IMAS_DS
       CHARACTER(LEN=NCHARTITLE)::TITR
       INTEGER NC(MVSIZ,10),MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ)
@@ -177,10 +177,11 @@ C
       IBOLTP = IPARG(72)  !Bolt preloading
       JCVT  = IPARG(37)
       IMAS_DS = DEFAULTS_SOLID%IMAS
+      IMAT = IXS(1,NFT+1)
 C
       DO I=LFT,LLT
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C
       CALL S10COOR3(
@@ -216,7 +217,11 @@ C----------------------------------------
          MASSCP(I) = ZERO
        ENDDO
       ENDIF
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IMAT = MAT(1)
+      IF (JTHE/=0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C-----------------------------
 C     POINTS D'INTEGRATION
 C-----------------------------
@@ -252,7 +257,7 @@ C------------------------------------------
       AIRE(:) = ZERO
       CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     VOLU, DTX , IGEO,IGTYP)
+     .     VOLU, DTX , IGEO,IGTYP,MAT_PARAM(IMAT))
 C----------------------------------------
 C     INITIALISATION DES MASSES
 C----------------------------------------

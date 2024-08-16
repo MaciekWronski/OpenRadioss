@@ -26,11 +26,17 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    s10forc3   ../engine/source/elements/solid/solide10/s10forc3.F
       !||====================================================================
       SUBROUTINE S10THERM(
-     1   PM,      IMAT,     NC,      VOL,
+     1   THERM,     NC,      VOL,
      2   PX,      PY,      PZ,      NI,
-     3   DT1,     TEMPNC,  TEL,     HEAT,
+     3   DT1,     TEMPNC,  TEMPEL,  HEAT,
      4   FPHI,    OFFG,    OFF,     NEL ,
      5   THEACCFACT)
+C-----------------------------------------------
+C     calculates nodal thermic force from heat energy increment
+C-----------------------------------------------
+C     M o d u l e s
+C-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -44,22 +50,22 @@ C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
       INTEGER, INTENT(IN) :: NEL
-      INTEGER, INTENT(IN) :: IMAT
       INTEGER NC(MVSIZ,10)
       my_real, INTENT(IN) :: THEACCFACT
       my_real
-     .    VOL(*), PX(MVSIZ,*), PY(MVSIZ,*), PZ(MVSIZ,*),
-     .    NI(MVSIZ,10), TEMPNC(*), FPHI(MVSIZ,10), PM(NPROPM,*), HEAT(*),
-     .    DT1, TEL(*), OFF(*), OFFG(*)
+     .    VOL(NEL), PX(MVSIZ,*), PY(MVSIZ,*), PZ(MVSIZ,*),
+     .    NI(MVSIZ,10), TEMPNC(*), FPHI(MVSIZ,10), HEAT(MVSIZ),
+     .    DT1, TEMPEL(NEL), OFF(NEL), OFFG(NEL)
+      type (therm_param_)        ,intent(in) :: therm
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,N
       my_real
-     .  CA, CB, KC, PHIX(MVSIZ), PHIY(MVSIZ), PHIZ(MVSIZ)
+     .  AS, BS, KC, PHIX(MVSIZ), PHIY(MVSIZ), PHIZ(MVSIZ)
 C-----------------------------------------------
-      CA = PM(75,IMAT)
-      CB = PM(76,IMAT)
+      AS = THERM%AS
+      BS = THERM%BS
 !
       PHIX(1:MVSIZ) = ZERO
       PHIY(1:MVSIZ) = ZERO
@@ -78,7 +84,7 @@ C
 C
       DO I=1,NEL
         IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
-        KC = (CA + CB*TEL(I))*DT1*VOL(I)*THEACCFACT          
+        KC = (AS + BS*TEMPEL(I))*DT1*VOL(I)*THEACCFACT          
         PHIX(I) = KC*PHIX(I)
         PHIY(I) = KC*PHIY(I)
         PHIZ(I) = KC*PHIZ(I)

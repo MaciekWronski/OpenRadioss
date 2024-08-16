@@ -774,7 +774,7 @@ C --------------------------
         IMAT = MXT(1)
         IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
           CALL S4THERM (
-     1         PM,      IMAT,    VOLN,    NC1,
+     1         MAT_ELEM%mat_param(IMAT)%therm,    VOLN,    NC1,
      2         NC2,     NC3,     NC4,     PX1,
      3         PX2,     PX3,     PX4,     PY1,
      4         PY2,     PY3,     PY4,     PZ1,
@@ -783,7 +783,7 @@ C --------------------------
      7         GBUF%OFF,LBUF%OFF,NEL,GLOB_THERM%THEACCFACT)
         ELSE
           CALL S4THERM (
-     1         PM,      IMAT,    VOLN,    NC1,
+     1         MAT_ELEM%mat_param(IMAT)%therm,    VOLN,    NC1,
      2         NC2,     NC3,     NC4,     PX1,
      3         PX2,     PX3,     PX4,     PY1,
      4         PY2,     PY3,     PY4,     PZ1,

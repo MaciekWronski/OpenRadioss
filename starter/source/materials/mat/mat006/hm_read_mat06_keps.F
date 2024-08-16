@@ -158,8 +158,6 @@ C-----------------------------------------------
         PM(31) = -PSH + C0+C1*MU + C2*MU**2+C3*MU**3+(C4+C5*MU)*E0
       ENDIF
 
-      PM(80)=INFINITY
-      
       IF(SSL == ZERO)SSL= EP10
       PM(46)=SSL
       PM(95)=RPR      
@@ -187,6 +185,8 @@ C-----------------------------------------------
       ENDDO                                           
       PM(51)=YP1                                           
       PM(79)=THREE100                                      
+      PM(80)=INFINITY
+      
       ! FIN PARAMS MUR TURBULENT                           
       PM(81)=CTM                                           
       PM(82)=CT1                                           
@@ -195,7 +195,10 @@ C-----------------------------------------------
       PM(85)=SK                                            
       PM(86)=SE                                            
       PM(95)=RPR                                           
-      PM(87)=RK0/RHO0  
+      PM(87)=RK0/RHO0
+!
+      MATPARAM%THERM%TREF = THREE100
+!      MATPARAM%TMELT = INFINITY   ! default
 !---------------------------------------------------------   
       MATPARAM%IEOS = 18   ! linear EOS is used by default 
       IPM(4)        = 18   ! keep this temporarily for output and fluid sections

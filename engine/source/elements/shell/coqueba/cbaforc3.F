@@ -202,7 +202,7 @@ C-----------------------------------------------
 C   L O C A L   V A R I A B L E S
 C-----------------------------------------------
       INTEGER 
-     .   I,II,J,JJ,JG,IR,IS,IT,IPT,NPTR,NPTS,NPTT,NLAY,MX, 
+     .   I,II,J,JJ,JG,IR,IS,IT,IPT,NPTR,NPTS,NPTT,NLAY,IMAT, 
      .   NPLAT,IDRIL,LENE,LENF,LENM,LENS,NNOD,N1,N2,N3,N4,
      .   NG,NPG,PT1,PT2,PT3,PT4,PTF,PTM,PTE,PTS,L_DIRA,L_DIRB,
      .   IPPID,JPID,IPTHK,IPPOS,IPMAT,IPMAT_IPLY,MATLY,IFAILWAVE,
@@ -263,7 +263,7 @@ C-----------------------------------------------
      .   BPINCHDAMP(MVSIZ,8),VFPINCHDAMPX(MVSIZ,4),VFPINCHDAMPY(MVSIZ,4),
      .   EZZAVG(MVSIZ),AREAPINCH(MVSIZ),ZLA(MVSIZ)
       INTEGER 
-     .   NPLATT,PTW ,LENW,PTT,IPOUT,IMAT
+     .   NPLATT,PTW ,LENW,PTT,IPOUT
       INTEGER  IPLATT(MVSIZ)
       my_real 
      .   VCORET(MVSIZ,3*NNOD),BMT(MVSIZ,9*NNOD),VQGT(MVSIZ,9*NNOD),
@@ -279,6 +279,7 @@ C-----------------------------------------------
        my_real , DIMENSION(NEL) ::  ZOFFSET
 !     variables for heat transfer
       my_real, dimension(mvsiz) :: fheat
+      my_real :: TMU,RPR
 !
 C-----------------------------------------------
       INTEGER, DIMENSION(NEL) :: OFFLY
@@ -315,7 +316,6 @@ C--------------------------
       NUMEL_DRAPE = NUMELC_DRAPE
       TEMPEL(:) = ZERO
       FHEAT(: ) = ZERO
-      IMAT = MAT(1)
 
 C
       NLAY = ELBUF_STR%NLAY
@@ -333,6 +333,7 @@ C                                 to allow for NPT = 0 (global LAW_3
         PID(I) = IXC(6,I)
         NGL(I) = IXC(7,I)
       ENDDO
+      IMAT = MAT(1)
 C
       NPTTOT  = 0
       DO ILAY=1,NLAY
@@ -855,13 +856,15 @@ C--------------------------
 C
       IF (JTHE /= 0) THEN
         IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
-          CALL CBATHERM(JFT   ,JLT   ,PM(1,MAT(1))     ,THK0  ,IXC     ,
+          CALL CBATHERM(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0  ,
      .                  BM    ,AREA  ,DT1C(1)   ,TEMP    ,TEMPEL,FHEAT   , 
-     .                  NPLAT ,IPLAT,THEM    ,GLOB_THERM%THEACCFACT) 
+     .                  NPLAT ,IPLAT,THEM    ,GLOB_THERM%THEACCFACT, 
+     .                  IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
         ELSE
-          CALL CBATHERM(JFT   ,JLT   ,PM(1,MAT(1))     ,THK0  ,IXC     ,
+          CALL CBATHERM(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0  ,
      .                  BM    ,AREA  ,DT1C(1)   ,TEMP    ,TEMPEL,DIE     , 
-     .                  NPLAT ,IPLAT,THEM    ,GLOB_THERM%THEACCFACT) 
+     .                  NPLAT ,IPLAT,THEM    ,GLOB_THERM%THEACCFACT,
+     .                  IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
         END IF
       ENDIF
 c-------------------------
@@ -987,14 +990,14 @@ C----------------------------
       IF(NPINCH > 0) THEN
 C
         IF(MTN == 1) THEN
-          MX = MAT(JFT)
-          E = PM(20,MX)
-          ANU = PM(21,MX)
+          IMAT = MAT(JFT)
+          E = PM(20,IMAT)
+          ANU = PM(21,IMAT)
           A11PINCH = E / (ONE-TWO*ANU)
         ELSEIF(MTN == 91) THEN
-          MX = MAT(JFT)
-          E = PM(20,MX)
-          ANU = PM(21,MX)
+          IMAT = MAT(JFT)
+          E = PM(20,IMAT)
+          ANU = PM(21,IMAT)
           A11PINCH = E / (ONE-TWO*ANU)
         ENDIF                
 C          
@@ -1023,11 +1026,16 @@ C
 C--------------------------
 C     THERMAL TIME STEP
 C--------------------------
-        IF (JTHE > 0.AND. GLOB_THERM%IDT_THERM == 1)THEN
-           call dttherm(nel     ,pm(1,mat(1))  ,npropm  ,glob_therm   ,
-     .                  jtur    ,tempel  ,vol0    ,rho       ,
-     .                  lc      ,off     ,conde   ,gbuf%re   ,gbuf%rk )
-         ENDIF 
+      IF (JTHE > 0.AND. GLOB_THERM%IDT_THERM == 1)THEN
+        IMAT = MAT(1)
+        TMU  = PM(81,IMAT)
+        RPR  = PM(95,IMAT) 
+        call dttherm(glob_therm,mat_elem%mat_param(imat)%therm,tempel ,
+     .               nel       ,jtur      ,a11(1)   ,tmu     ,rpr     ,
+     .               vol0      ,rho       ,lc       ,off     ,conde   ,
+     .               gbuf%re   ,gbuf%rk   )
+      ENDIF 
+c-------------------------
 C 
       IF(ISHPLYXFEM > 0) THEN                                     
         CALL CNDT_PLY(                                            

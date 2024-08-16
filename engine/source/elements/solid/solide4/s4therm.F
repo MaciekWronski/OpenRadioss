@@ -26,13 +26,17 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    s4forc3   ../engine/source/elements/solid/solide4/s4forc3.F
       !||====================================================================
       SUBROUTINE S4THERM(
-     1   PM,      IMAT,     VOL,     NC1,
+     1   THERM,   VOL,     NC1,
      2   NC2,     NC3,     NC4,     PX1,
      3   PX2,     PX3,     PX4,     PY1,
      4   PY2,     PY3,     PY4,     PZ1,
      5   PZ2,     PZ3,     PZ4,     DT1,
      6   TEMPNC,  TEL,     HEAT,     FPHI,
      7   OFFG,    OFF,     NEL ,THEACCFACT)
+!----------------------------------------------
+!     M o d u l e s
+!-----------------------------------------------
+      use therm_param_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -46,28 +50,28 @@ C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
       INTEGER, INTENT(IN) :: NEL
-      INTEGER, INTENT(IN) :: IMAT
       INTEGER NC1(*),NC2(*),NC3(*),NC4(*)
       my_real, INTENT(IN) :: THEACCFACT
       my_real
      .    VOL(*), PX1(*), PX2(*), PX3(*), PX4(*), 
      .    PY1(*), PY2(*), PY3(*), PY4(*),
      .    PZ1(*), PZ2(*), PZ3(*), PZ4(*),
-     .    TEMPNC(*), FPHI(MVSIZ,4), PM(NPROPM,*),HEAT(*),
+     .    TEMPNC(*), FPHI(MVSIZ,4), HEAT(*),
      .    DT1,TEL(*),OFF(*),OFFG(*)
+      type (therm_param_) :: THERM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I, J
 C     REAL
       my_real
-     .  CA, CB, KC, PHIX, PHIY, PHIZ, A
+     .  AS, BS, KC, PHIX, PHIY, PHIZ, A
 C===================================================================
 
-        CA = PM(75,IMAT)
-        CB = PM(76,IMAT)
+        AS = THERM%AS
+        BS = THERM%BS
         DO I=1,NEL
-          IF(OFF(I)==ZERO.OR.OFFG(I)<=ZERO) CYCLE
+          IF (OFF(I)==ZERO .OR. OFFG(I)<=ZERO) CYCLE
 
 C 
 C - flux
@@ -81,7 +85,7 @@ C
           PHIZ =  TEMPNC(NC1(I))*PZ1(I) + TEMPNC(NC2(I))*PZ2(I)  +
      .            TEMPNC(NC3(I))*PZ3(I) + TEMPNC(NC4(I))*PZ4(I)        
 C      
-          KC = (CA + CB*TEL(I))*DT1*VOL(I)*THEACCFACT
+          KC = (AS + BS*TEL(I))*DT1*VOL(I)*THEACCFACT
           PHIX = KC*PHIX
           PHIY = KC*PHIY
           PHIZ = KC*PHIZ

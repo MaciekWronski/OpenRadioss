@@ -114,7 +114,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,NF1,IBID,IGTYP,IREP,IP,ILAY,NLAY,NUVAR,NCC,JHBE,
-     .   NUVARR,IDEF,IPANG,IPTHK,IPPOS,IPMAT,IG,IM,MTN0,NLYMAX,
+     .   NUVARR,IDEF,IPANG,IPTHK,IPPOS,IPMAT,IG,IM,MTN0,NLYMAX,IMAT,
      .   IPID1,NPTR,NPTS,NPTT,L_PLA,L_SIGB,IMAS_DS
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ), MAT0(MVSIZ)
       INTEGER IX1(MVSIZ), IX2(MVSIZ), IX3(MVSIZ), IX4(MVSIZ),
@@ -214,6 +214,7 @@ C
       JHBE  = IPARG(23)
       IREP  = IPARG(35)
       IGTYP = IPARG(38)
+      IMAT  = IXS(1,NFT+1)
       NF1=NFT+1
       IDEF =0
       IBID = 0
@@ -224,8 +225,8 @@ C
       IMAS_DS = DEFAULTS_SOLID%IMAS
 C
       DO I=1,NEL
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) = MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C
       CALL S6CCOOR3(X     ,IXS(1,NF1)   ,GEO  ,NGL  ,MAT  ,PID  ,
@@ -287,7 +288,10 @@ C
       IF (IGTYP == 22) CALL SCZERO3(GBUF%RHO,GBUF%SIG,GBUF%EINT,NEL)
 C----------------------------------------
 C Thermal initialization
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE/=0) THEN
+!        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C-----------------------------
 C Loop on integration points
       DO ILAY=1,NLAY
@@ -364,7 +368,7 @@ C         moyene density,sig,...---
           AIRE(:) = ZERO
           CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .         LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .         VOLU, DTX , IGEO,IGTYP)
+     .         VOLU, DTX , IGEO,IGTYP,MAT_PARAM(IMAT))
 C
           CALL SVALUE0(
      .         LBUF%RHO,LBUF%VOL,LBUF%OFF,LBUF%SIG,LBUF%EINT,DTX,
@@ -404,7 +408,7 @@ C Element time step
         AIRE(:) = ZERO
         CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .       LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .       VOLU, DTX, IGEO,IGTYP)
+     .       VOLU, DTX, IGEO,IGTYP,MAT_PARAM(IMAT))
 C------------------------------------------
        IF(IGTYP == 22) THEN
         DO I=1,NEL

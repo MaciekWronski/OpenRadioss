@@ -37,7 +37,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||====================================================================
       SUBROUTINE HM_READ_MAT49(
      .           LSUBMODEL ,MTAG     ,UNITAB   ,IPM    ,PM       ,
-     .           MAT_ID    ,TITR     ,ISRATE ,MATPARAM )
+     .           MAT_ID    ,TITR     ,ISRATE   ,MAT_PARAM )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -78,7 +78,7 @@ C-----------------------------------------------
       TYPE(UNIT_TYPE_), INTENT(in) :: UNITAB
       TYPE(SUBMODEL_DATA), DIMENSION(NSUBMOD),INTENT(IN) :: LSUBMODEL
       TYPE(MLAW_TAG_), INTENT(INOUT)               :: MTAG
-      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MATPARAM
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -87,7 +87,7 @@ C-----------------------------------------------
       INTEGER JTHE, IFLAGR
       my_real
      .    YOUNG,NU,SIG0,CB,CN,SIGM,EPSM,T0,TMELT,PMIN,
-     .    SPH,CB1,CB2,CH,CF,G0,BULK,
+     .    RHOCP,CB1,CB2,CH,CF,G0,BULK,
      .    FAC_L,FAC_T,FAC_M,FAC_C,
      .   BID2 ,BID3 ,BID4 ,BID5 ,
      .   BID2_,BID3_,BID4_,BID5_,
@@ -121,7 +121,7 @@ C-----------------------------------------------
 
       CALL HM_GET_FLOATV('MAT_T0'         ,T0       ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT_TMELT'      ,TMELT    ,IS_AVAILABLE, LSUBMODEL, UNITAB)
-      CALL HM_GET_FLOATV('MAT_SPHEAT'     ,SPH      ,IS_AVAILABLE, LSUBMODEL, UNITAB)
+      CALL HM_GET_FLOATV('MAT_SPHEAT'     ,RHOCP    ,IS_AVAILABLE, LSUBMODEL, UNITAB)
       CALL HM_GET_FLOATV('MAT_PC'         ,PMIN     ,IS_AVAILABLE, LSUBMODEL, UNITAB)
 
       CALL HM_GET_FLOATV('MAT_B1'         ,CB1      ,IS_AVAILABLE, LSUBMODEL, UNITAB)
@@ -133,7 +133,7 @@ C-----------------------------------------------
 
       !Default EoS
       IEOS   = 18 ! Linear EOS is used by default
-      MATPARAM%IEOS = IEOS
+      MAT_PARAM%IEOS = IEOS
       IPM(4)        = IEOS    ! keep this temporarily for output and fluid sections
 
       IF (PMIN==ZERO) PMIN=-EP20
@@ -172,28 +172,34 @@ C-----------------------------------------------
       PM(44) = CB2
       PM(45) = CH
       PM(46) = TMELT
-      PM(69) = SPH
+      PM(69) = RHOCP
       PM(77) = CF
       PM(78) = T0
       PM(79) = T0
       PM(80) = TMELT
+!      
+      MAT_PARAM%RHO         = RHOR
+      MAT_PARAM%RHO0        = RHO0
+      MAT_PARAM%THERM%TREF  = T0
+      MAT_PARAM%THERM%TMELT = TMELT
+      MAT_PARAM%THERM%RHOCP = RHOCP
                 
       !Formulation for solid elements time step computation.
       IPM(252)= 2
       PM(105) = TWO*G0/(BULK+FOUR_OVER_3*G0) ! =(1-2*Nu)/(1-Nu)
 
       ! MATPARAM keywords
-      CALL INIT_MAT_KEYWORD(MATPARAM,"INCOMPRESSIBLE")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"INCOMPRESSIBLE")
 
       ! Material compatibility with /EOS option
-      CALL INIT_MAT_KEYWORD(MATPARAM,"EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"EOS")
 
       ! EOS/Thermo keyword for pressure treatment in elements
-      CALL INIT_MAT_KEYWORD(MATPARAM,"HYDRO_EOS")
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"HYDRO_EOS")
 
       ! Properties compatibility 
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SOLID_ISOTROPIC")    
-      CALL INIT_MAT_KEYWORD(MATPARAM,"SPH")         
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SOLID_ISOTROPIC")    
+      CALL INIT_MAT_KEYWORD(MAT_PARAM,"SPH")         
 
       WRITE(IOUT,1000)          
       IF(IS_ENCRYPTED)THEN
@@ -201,7 +207,7 @@ C-----------------------------------------------
       ELSE
         WRITE(IOUT,2001) TITR,MAT_ID,49
         WRITE(IOUT,2002) RHO0,RHOR  
-        WRITE(IOUT,1100)YOUNG,SIG0,NU,CB,CN,SIGM,EPSM,T0,TMELT,SPH,PMIN,CB1,CB2,CH,CF
+        WRITE(IOUT,1100)YOUNG,SIG0,NU,CB,CN,SIGM,EPSM,T0,TMELT,RHOCP,PMIN,CB1,CB2,CH,CF
       ENDIF
 
       MTAG%G_PLA   = 1    

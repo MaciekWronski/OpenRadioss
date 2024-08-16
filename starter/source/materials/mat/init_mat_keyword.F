@@ -161,112 +161,116 @@ C-----------------------------------------------
       INTEGER IMAT
 C=======================================================================
       SELECT CASE (KEYWORD)
-c---
+!---
         CASE ("COMPRESSIBLE")      
           MATPARAM%COMPRESSIBILITY = 1
-c
+!
         CASE ("INCOMPRESSIBLE")      
           MATPARAM%COMPRESSIBILITY = 2
-c
+!
         CASE ("ELASTO_PLASTIC")      
           MATPARAM%COMPRESSIBILITY = 3
-c
+!
         CASE ("INCREMENTAL")      
           MATPARAM%STRAIN_FORMULATION = 1
-c
+!
         CASE ("TOTAL")      
           MATPARAM%STRAIN_FORMULATION = 2
-c
+!
         CASE ("LARGE_STRAIN")      
           MATPARAM%SMSTR = 2
-c
+!
         CASE ("SMALL_STRAIN")      
           MATPARAM%SMSTR = 1
-c          
+!          
         CASE ("HYDROSTATIC")      
           MATPARAM%IPRES = 1
-c          
+!          
         CASE ("HYDRO_EOS")      
           MATPARAM%IPRES = 2
-c          
+!          
         CASE ("HOOK")      
           MATPARAM%IPRES = 3
-c
+!
         CASE ("ISOTROPIC")      
           MATPARAM%ORTHOTROPY = 1
-c
+!
         CASE ("ORTHOTROPIC")      
           MATPARAM%ORTHOTROPY = 2
-c
+!
         CASE ("ANISOTROPIC")      
           MATPARAM%ORTHOTROPY = 3
-c
+!
         CASE ("SOLID_ISOTROPIC")   ! Compatibility with /PROP/TYPE 6/14/20/21/22
           MATPARAM%PROP_SOLID = 1          
-c
+!
         CASE ("SOLID_ORTHOTROPIC") ! Compatibility with /PROP/TYPE 6/21/22
           MATPARAM%PROP_SOLID = 2  
-c
+!
         CASE ("SOLID_COMPOSITE")   ! Compatibility with /PROP/TYPE 22
           MATPARAM%PROP_SOLID = 3
-c
+!
         CASE ("SOLID_COHESIVE")    ! Compatibility with /PROP/TYPE 43
           MATPARAM%PROP_SOLID = 4
-c
+!
         CASE ("SOLID_POROUS")      ! Compatibility with /PROP/TYPE 14/15
           MATPARAM%PROP_SOLID = 5
-c 
+! 
         CASE ("SOLID_ALL")         ! Compatibility with /PROP/TYPE 6/14/20/21/22/43
           MATPARAM%PROP_SOLID = 6     
-c
+!
         CASE ("SHELL_ISOTROPIC")   ! Compatibility with /PROP/TYPE 1/9/10/11/17/19/51/52
           MATPARAM%PROP_SHELL = 1          
-c
+!
         CASE ("SHELL_ORTHOTROPIC") ! Compatibility with /PROP/TYPE 9/10/11/17/19/51/52
           MATPARAM%PROP_SHELL = 2  
-c
+!
         CASE ("SHELL_COMPOSITE")   ! Compatibility with /PROP/TYPE 10/11/17/19/51/52
           MATPARAM%PROP_SHELL = 3
-c
+!
         CASE ("SHELL_ANISOTROPIC") ! Compatibility with /PROP/TYPE 10/11/16/17/19/51/52
           MATPARAM%PROP_SHELL = 4
-c
+!
         CASE ("SHELL_ALL")         ! Compatibility with /PROP/TYPE 1/9/10/11/16/17/19/51/52
           MATPARAM%PROP_SHELL = 5          
-c
+!
         CASE ("BEAM_CLASSIC")      ! Compatibility with /PROP/TYPE 3
           MATPARAM%PROP_BEAM = 1          
-c
+!
         CASE ("BEAM_INTEGRATED")   ! Compatibility with /PROP/TYPE 18
           MATPARAM%PROP_BEAM = 2  
-c
+!
         CASE ("BEAM_ALL")          ! Compatibility with /PROP/TYPE 3/18
           MATPARAM%PROP_BEAM = 3
-c
+!
         CASE ("SPRING_PREDIT")     ! Compatibility with /PROP/TYPE 36
           MATPARAM%PROP_SPRING = 1          
-c
+!
         CASE ("SPRING_MATERIAL")   ! Compatibility with /PROP/TYPE 23
           MATPARAM%PROP_SPRING = 2  
-c
+!
         CASE ("SPRING_ALL")        ! Compatibility with /PROP/TYPE 23/36
           MATPARAM%PROP_SPRING = 3   
-c
+!
         CASE ("TRUSS")             ! Compatibility with /PROP/TYPE 2
           MATPARAM%PROP_TRUSS = 1 
-c
+!
         CASE ("SPH")               ! Compatibility with /PROP/TYPE 34
           MATPARAM%PROP_SPH = 1         
-c          
+!          
         CASE ("EOS")      
-          MATPARAM%COMPATIBILITY_EOS = 1 ! Compatibility with option /EOS
-c       
+          MATPARAM%COMPATIBILITY_EOS = 1   ! Compatibility with /EOS
+!       
         CASE ("VISC")      
-          MATPARAM%COMPATIBILITY_VISC = 1 ! Compatibility with option /VISC
+          MATPARAM%COMPATIBILITY_VISC = 1  ! Compatibility with /VISC
+!       
+        CASE ("THERM")      
+          MATPARAM%COMPATIBILITY_THERM = 1 ! Compatibility with /HEAT/MAT and /THERM_STRESS
+!
         CASE DEFAULT      
           ! write error : keyword not recognized"
-c---
+!---
       END SELECT
-c-----------
+!-----------
       RETURN
       END 

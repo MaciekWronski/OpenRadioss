@@ -145,7 +145,6 @@
       use matparam_def_mod
       use prop_param_mod
       use group_param_mod
-
 ! ----------------------------------------------------------------------------------------------------------------------
       implicit none
 ! ----------------------------------------------------------------------------------------------------------------------
@@ -163,7 +162,7 @@
            type (group_param_)     ,dimension(:)   ,allocatable :: group_param    !< common element group data
         
            type (matparam_struct_) ,dimension(:)   ,pointer     :: mat_param      !< material model data structure
-        
+           
 !           type (prop_param_)      ,dimension(:)   ,allocatable :: prop_param     !< element property data structure
 !           type (prop_param_)      ,dimension(:)   ,allocatable :: prop_stack     !< element stack data
 !           type (prop_param_)      ,dimension(:)   ,allocatable :: prop_ply       !< element ply data

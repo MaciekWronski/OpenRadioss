@@ -48,7 +48,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .                  NEL         ,SKEW   ,MSQ       ,IPART   ,IPARTQ ,
      .                  IPM         ,NSIGS  ,
      .                  WMA         ,PTQUAD ,BUFMAT    ,NPF     ,TF     ,
-     .                  IPARGG      ,ILOADP ,FACLOAD   ,PARTSAV ,V      )
+     .                  IPARGG      ,ILOADP ,FACLOAD   ,PARTSAV ,V      ,MAT_PARAM    )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -57,6 +57,7 @@ C-----------------------------------------------
       USE DETONATORS_MOD
       USE ALE_CONNECTIVITY_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD          
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -88,11 +89,12 @@ C-----------------------------------------------
       my_real,INTENT(IN) :: FACLOAD(LFACLOAD,*)
       TYPE(DETONATORS_STRUCT_)::DETONATORS
       TYPE(t_ale_connectivity), INTENT(INOUT) :: ALE_CONNECTIVITY
+      TYPE (MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ)
-      INTEGER NF1, IELVS, IX, I, IGTYP, IP, IBID, IPID1
+      INTEGER NF1, IELVS, IX, I, IGTYP, IP, IBID, IPID1,IMAT
       my_real
      .   E1Y(MVSIZ),E1Z(MVSIZ),E2Y(MVSIZ),E2Z(MVSIZ),
      .   BID(1), DTX(MVSIZ),
@@ -161,7 +163,11 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE ET TURBULENCE
 C----------------------------------------
-      IF (JTHE/=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IMAT = MAT(1)
+      IF (JTHE/=0) THEN
+!        LBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%T0
+        LBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
       IF (JTUR/=0) CALL ATURI2(IPARGG ,GBUF%RHO,PM,IXQ,X,
      .                        GBUF%RK,GBUF%RE, AIRE)
 C------------------------------------------
@@ -175,7 +181,7 @@ C      CALCUL DES DT ELEMENTAIRES
 C-------------------------------------------
       CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,GBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     GBUF%VOL, DTX, IGEO,IGTYP)
+     .     GBUF%VOL, DTX, IGEO,IGTYP,MAT_PARAM(MAT(1)))
 c
        DO I=LFT,LLT
         IF(IXQ(6,I+NFT)/=0) THEN

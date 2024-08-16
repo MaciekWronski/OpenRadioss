@@ -55,16 +55,17 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      2                      V   ,PM     ,GEO    ,MS     ,IN     ,
      3                      PTG ,MSC    ,MSS    ,MSTG   ,INC    ,
      4                      INTG,THKC   ,THKT   ,PARTSAV,IPARTS ,
-     5                   IPARTC ,IPARTT ,VEUL   ,DTELEM ,IHBE   ,
-     6                   ISOLNOD,NVC    ,I8MI   ,MSNF    ,MSSF  ,
-     7                   IGEO   ,ETNOD  ,NSHNOD ,STC     ,STTG  ,
-     8                   WMA    ,SH4TREE,SH3TREE,MCP     ,MCPC  ,
-     9                   TEMP   ,MCPS   ,MSSX   ,MCPSX   ,INS   ,
-     A                   STIFN  ,STIFR  ,CONNEC ,IRIG_NODE,NUMEL,
-     B                   NINDX  ,XREFC  ,XREFTG ,XREFS   ,MSSA  ,
-     C                   SH3TRIM,ISUBSTACK,BUFMAT,IPM    ,STACK ,
-     D                   RNOISE ,STRC  ,STRTG   ,PERTURB ,NEL   ,
-     E                   GROUP_PARAM   ,IGTYP   ,DEFAULTS,GLOB_THERM)
+     5                      IPARTC ,IPARTT ,VEUL   ,DTELEM ,IHBE   ,
+     6                      ISOLNOD,NVC    ,I8MI   ,MSNF    ,MSSF  ,
+     7                      IGEO   ,ETNOD  ,NSHNOD ,STC     ,STTG  ,
+     8                      WMA    ,SH4TREE,SH3TREE,MCP     ,MCPC  ,
+     9                      TEMP   ,MCPS   ,MSSX   ,MCPSX   ,INS   ,
+     A                      STIFN  ,STIFR  ,CONNEC ,IRIG_NODE,NUMEL,
+     B                      NINDX  ,XREFC  ,XREFTG ,XREFS   ,MSSA  ,
+     C                      SH3TRIM,ISUBSTACK,BUFMAT,IPM    ,STACK ,
+     D                      RNOISE ,STRC  ,STRTG   ,PERTURB ,NEL   ,
+     E                      MAT_PARAM,GROUP_PARAM  ,IGTYP   ,DEFAULTS,
+     F                      GLOB_THERM)
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -72,6 +73,7 @@ C-----------------------------------------------
       USE STACK_MOD
       USE GROUP_PARAM_MOD            
       USE DEFAULTS_MOD
+      USE MATPARAM_DEF_MOD
       use glob_therm_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
@@ -113,6 +115,7 @@ C-----------------------------------------------
       TYPE(GROUP_PARAM_)  :: GROUP_PARAM
       TYPE(DEFAULTS_), INTENT(IN)      :: DEFAULTS             
       TYPE(glob_therm_) ,intent(in)    :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -170,16 +173,18 @@ C-----------------------------------------------
       IF (ITY == 1.AND. ISOLNOD == 4)THEN
 C-----------------------------------------------
 C Solid 4 nodes tetrahedron
+        IMAT  = IXS(1,1+NFT)         ! material number
+        IPROP = IXS(NIXS-1,1+NFT)    ! property number
         CALL S4COOR3(X    ,XREFS(1,1,NFT+1),IXS(1,NFT+1),NGL  ,MXT  ,
      .               PID  ,IX1   ,IX2    ,IX3     ,IX4  ,
      .               X1   ,X2   ,X3   ,X4   ,Y1   ,Y2   ,
      .               Y3   ,Y4   ,Z1   ,Z2   ,Z3   ,Z4   )
         DO I=1,NEL
-          RHO(I) = PM(89,MXT(I))
+          RHO(I) = MAT_PARAM(IMAT)%RHO0
           DTELEM(NFT+I) = 1.E30
           FILL(I) = ONE
-          RHOCP(I) =  PM(69,MXT(I))
-          TEMP0(I) =  PM(79,MXT(I))
+          RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+          TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
         ENDDO
 C        
         DO I=1,NEL
@@ -219,7 +224,7 @@ C
 C
         CALL DTMAIN(GEO  ,PM   ,VOID  ,PID   ,MXT   ,VOID  ,
      .              VOID ,VOID ,VOID  ,VOID  ,VOID  ,BUFMAT, 
-     .              DDELTAX, AREA, VOLU, DTX, IGEO,IGTYP)
+     .              DDELTAX, AREA, VOLU, DTX, IGEO,IGTYP,MAT_PARAM(IMAT))
 C
         DO I=1,NEL
          DTELEM(NFT+I)=DTX(I)
@@ -233,6 +238,7 @@ C---------------------------------------------
       ELSEIF (ITY == 1.AND. ISOLNOD == 10)THEN
 C---------------------------------------------
 C Solid 10 nodes tetrahedron-
+        IMAT = IXS(1,1+NFT)         ! material number
         NF1 = NFT+1
         NF2 = NF1-NUMELS8
         CALL S10COOR3_OLD(X,V,IXS(1,NF1),IXS10(1,NF2),
@@ -252,11 +258,11 @@ C
         DO I=1,NEL
           MASSCP(I) = ZERO 
           MASS(I) = ZERO
-          RHO(I) = PM(89,MXT(I))
+          RHO(I) = MAT_PARAM(IMAT)%RHO0
           FILL(I) = ONE
           DTELEM(NFT+I) = 1.E30
-          RHOCP(I) =  PM(69,MXT(I))
-          TEMP0(I) =  PM(79,MXT(I))
+          RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+          TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
         ENDDO
         DO IP=1,NPT                                   
           DO I=1,NEL                                
@@ -303,6 +309,8 @@ C--------------------------------------
       ELSEIF(ITY == 1)THEN
 C--------------------------------------
 C Solid 8 nodes brick
+        IMAT  = IXS(1,1+NFT)         ! material number
+        IPROP = IXS(NIXS-1,1+NFT)    ! property number
         DO I=1,NEL     
          RHOCP(I) = ZERO 
          TEMP0(I) = ZERO 
@@ -341,7 +349,7 @@ C
      .           ZD1  ,ZD2  ,ZD3  ,ZD4  ,ZD5  ,ZD6  ,ZD7  ,ZD8   )
      
           DO I=1,NEL
-            RHO(I) = PM(89,MXT(I))
+            RHO(I) = MAT_PARAM(IMAT)%RHO0
             DTELEM(NFT+I) = EP30                                         
             FILL(I) = ONE
           ENDDO
@@ -368,7 +376,8 @@ C
 C  
 C Element time step
         CALL DTMAIN(GEO  ,PM   ,VOID  ,PID   ,MXT   ,VOID  ,  
-     .              VOID ,VOID ,VOID  ,VOID  ,VOID  ,BUFMAT, DDELTAX, AREA, VOLU, DTX , IGEO,IGTYP)  
+     .              VOID ,VOID ,VOID  ,VOID  ,VOID  ,BUFMAT, DDELTAX, 
+     .              AREA, VOLU, DTX , IGEO,IGTYP,MAT_PARAM(IMAT))  
 C
         DO  I=1,NEL
           N = I + NFT
@@ -409,7 +418,7 @@ C
      .              TEMP    ,BID , BID,BID,BID,
      .              BID,BID,ISUBSTACK,IBID,BIDBUF,
      .              STACK,BIDG, RNOISE ,BID ,GLOB_THERM%NINTEMP,
-     .              PERTURB,IX1     ,IX2      ,IX3     ,IX4    ,IBID, IBID )
+     .              PERTURB,IX1     ,IX2      ,IX3     ,IX4    ,IBID, IBID , IBID)
         CALL CDERII(PX1 ,PX2 ,PY1   ,PY2,
      .              X1  ,X2  ,X3  ,X4  ,Y1  ,Y2  , 
      .              Y3  ,Y4  ,Z1  ,Z2  ,Z3  ,Z4  ,
@@ -503,7 +512,7 @@ C
      .               MCPS(1,NFT+1) , TEMP,SH3TRIM,ISUBSTACK,IBID,
      .               BIDBUF, STACK,BIDG ,RNOISE,
      .               BID,PERTURB,IX1   ,IX2      ,IX3    ,GLOB_THERM%NINTEMP,
-     .               X2L      ,X3L    ,Y3L , IBID, IBID   )
+     .               X2L      ,X3L    ,Y3L , IBID, IBID  ,MAT_PARAM)
         CALL C3DERII(LFT,LLT,PM,GEO,PX1,PY1,PY2,S
      .               TIFN   ,STIFR   ,IXTG(1,NFT+1),
      .               THKT,SH3TREE,ALDT,BUFMAT , IPM   ,IGEO ,

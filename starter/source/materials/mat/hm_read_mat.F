@@ -1412,14 +1412,22 @@ c
         PM(72,I)   = JALE + EM01    
         IPM(217,I) = IUSER_LAW
 c---------------------------------------------------------
-c
+        ! double storage needed (temporary untin total PM cleaning)
         IF (MATPARAM%RHO   > ZERO) PM(1 ,I) = MATPARAM%RHO
         IF (MATPARAM%RHO0  > ZERO) PM(89,I) = MATPARAM%RHO0
+!
+        IF (MATPARAM%RHO   == ZERO)  MATPARAM%RHO  = PM(1 ,I)
+        IF (MATPARAM%RHO0  == ZERO)  MATPARAM%RHO0 = PM(89,I)
 !
         IF (MATPARAM%YOUNG == ZERO) MATPARAM%YOUNG = PM(20,I)
         IF (MATPARAM%NU    == ZERO) MATPARAM%NU    = PM(21,I)
         IF (MATPARAM%SHEAR == ZERO) MATPARAM%SHEAR = PM(22,I)
         IF (MATPARAM%BULK  == ZERO) MATPARAM%BULK  = PM(32,I)
+
+        IF (PM(20,I) == ZERO) PM(20,I) = MATPARAM%YOUNG 
+        IF (PM(21,I) == ZERO) PM(21,I) = MATPARAM%NU    
+        IF (PM(22,I) == ZERO) PM(22,I) = MATPARAM%SHEAR 
+        IF (PM(32,I) == ZERO) PM(32,I) = MATPARAM%BULK  
 !
         ! to be defined
         ! IF (MATPARAM%STIFF_CONTACT == ZERO) MATPARAM%STIFF_CONTACT = PM(?,I)

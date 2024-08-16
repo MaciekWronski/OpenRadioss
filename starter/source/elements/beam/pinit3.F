@@ -37,7 +37,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    bpreload_mod     ../starter/share/modules1/bpreload_mod.F
       !||    message_mod      ../starter/share/message_module/message_mod.F
       !||====================================================================
-      SUBROUTINE PINIT3(ELBUF_STR,
+      SUBROUTINE PINIT3(MAT_PARAM,ELBUF_STR,
      1                  STP      ,IC      ,PM      ,X       ,GEO   ,
      2                  XMAS     ,TINER   ,DTELEM  ,NFT     ,NEL   ,
      3                  STIFN    ,STIFR   ,PARTSAV ,V       ,IPART ,
@@ -49,6 +49,7 @@ C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
       USE ELBUFDEF_MOD
+      USE MATPARAM_DEF_MOD
       USE MESSAGE_MOD
       USE BPRELOAD_MOD
       use glob_therm_mod
@@ -81,6 +82,7 @@ C
       TYPE(ELBUF_STRUCT_), TARGET :: ELBUF_STR
       TYPE(PREL1D_) ,DIMENSION(NPRELOAD_A),    TARGET :: PRELOAD_A
       type (glob_therm_) ,intent(in)      :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -108,7 +110,7 @@ C
      .            X1,X2,X3, Y1,Y2,Y3, Z1,Z2,Z3)
 c
       CALL PEVECI(GBUF%SKEW, X1,X3, Y1,Y3, Z1,Z3,X2,Y2,Z2,NC2,NC3)
-      CALL PMASS(GEO,PM,XMAS,TINER,
+      CALL PMASS(MAT_PARAM,GEO,PM,XMAS,TINER,
      .           STIFN,STIFR,PARTSAV,V,IPART(NFT+1),
      .           MSP(NFT+1),INP(NFT+1),IGEO , STIFINT, STP(NFT+1),
      .           X1,X2, Y1,Y2, Z1,Z2,

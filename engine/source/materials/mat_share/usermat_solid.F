@@ -1635,14 +1635,14 @@ C   THIS SUBROUTINE RETURN THE NEW BULK VISCOSITY Q
 C-----------------------
       IF (JSPH == 0)THEN  
         JSMS = IPARG(52,NG)
-        CALL MQVISCB(
+        CALL MQVISCB(MAT_ELEM%MAT_PARAM(IMAT),
      1   PM,       OFF,      RHO,      BID1,
      2   EL_TEMP,  SSP,      BID3,     STIFN,
      3   DT2T,     NELTST,   ITYPTST,  AIRE,
      4   OFFG,     GEO,      PID,      VOLN,
      5   VD2,      DELTAX,   VIS,      D1,
      6   D2,       D3,       PNEW,     PSH,
-     7   MAT,      NGL,      Q,        SSP_EQ,
+     7   MAT(1),   NGL,      Q,        SSP_EQ,
      8   VOL,      MSSA,     DMELS,    IGEO,
      9   FACQ0,    CONDE,    GBUF%DT,  GBUF%G_DT,
      A   IPM,      RHOREF,   RHOSP,    NEL,

@@ -45,7 +45,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .                   VNIGE    ,BNIGE   ,PTSOL  ,
      .                   BUFMAT   ,NPF     ,TF     ,FAIL_INI,NCTRL,
      .                   MSIG3D   ,KNOT    ,NCTRLMAX,WIGE   ,PX,PY,PZ,
-     .                   KNOTLOCPC,KNOTLOCEL)
+     .                   KNOTLOCPC,KNOTLOCEL,MAT_PARAM)
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -54,6 +54,7 @@ C-----------------------------------------------
       USE DETONATORS_MOD      
       USE ALE_CONNECTIVITY_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD          
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -90,6 +91,7 @@ C-----------------------------------------------
       TYPE(ELBUF_STRUCT_), TARGET :: ELBUF_STR
       TYPE(DETONATORS_STRUCT_)::DETONATORS
       TYPE(t_ale_connectivity), INTENT(INOUT) :: ALE_CONNECTIVITY
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT)  :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -352,7 +354,8 @@ C       CALCUL DES DT ELEMENTAIRES
 C------------------------------------------
         CALL DTMAIN(GEO       ,PM        ,IPM         ,IPROP   ,IMAT    ,FV    ,
      .              LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT,
-     .              TBID      ,TBID      ,TBID        ,TBID    ,IGEO    ,IGTYP)
+     .              TBID      ,TBID      ,TBID        ,TBID    ,IGEO    ,IGTYP,
+     .              MAT_PARAM(IMAT))
 
         ENDDO
        ENDDO

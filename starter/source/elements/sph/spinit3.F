@@ -45,7 +45,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .                   PARTSAV ,V        ,IPARTSP,BUFMAT,
      .                   PM      ,ITAB     ,MSR    ,INR   ,IXSP   ,
      .                   NOD2SP  ,IPARG    ,ALE_CONNECTIVITY  ,DETONATORS  ,
-     .                   SIGSPH  ,ISPTAG   ,IPART,
+     .                   SIGSPH  ,ISPTAG   ,IPART,MAT_PARAM,
      .                   IPM     ,NSIGSPH  ,PTSPH  ,NPF   ,
      .                   TF      ,ELBUF_STR,MCP    ,TEMP  ,ILOADP ,
      .                   FACLOAD ,STIFINT  ,I7STIFS,GLOB_THERM)
@@ -55,6 +55,7 @@ C-----------------------------------------------
       USE ELBUFDEF_MOD    
       USE DETONATORS_MOD              
       USE ALE_CONNECTIVITY_MOD
+      USE MATPARAM_DEF_MOD
       use glob_therm_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
@@ -93,6 +94,7 @@ C-----------------------------------------------
       my_real,INTENT(INOUT) :: STIFINT(NUMNOD)
       TYPE(DETONATORS_STRUCT_)::DETONATORS
       type (glob_therm_) ,intent(inout) :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -134,7 +136,7 @@ c
           IMAT=IPART(1,IPRT)
           IG  =IPART(2,IPRT)
           MP    =GET_U_GEO(1,IG)
-          RHO(I)=PM(1,IMAT)
+          RHO(I)=MAT_PARAM(IMAT)%RHO
           IF (NINT(SPBUF(13,N))==1) THEN
 C--         type = 1 - particle with mass input            
             VOL(I)=SPBUF(12,N)/RHO(I)
@@ -155,7 +157,7 @@ C--         type = 2 - particle with volume input
           IPRT=IPARTSP(N)
           IMAT=IPART(1,IPRT)
           IG  =IPART(2,IPRT)
-          RHO(I)=PM(1,IMAT)
+          RHO(I)=MAT_PARAM(IMAT)%RHO
 C
 C Rho, Vol prepared in SINIT3
           VOL(I)     =SPBUF(12,N)
@@ -239,17 +241,19 @@ C--------------------------------------------------
 C----------------------------------------
 C     INITIALISATION OF THERMAL BEHAVIOR
 C----------------------------------------
-      IF (JTHE > 0)THEN
+      IF (JTHE > 0) THEN
+        IMAT = MXT(1)
         DO I=LFT,LLT
-          GBUF%TEMP(I)=PM(79,MXT(I))
+          GBUF%TEMP(I)=MAT_PARAM(IMAT)%THERM%TREF
         ENDDO
       ELSEIF (JTHE < 0) THEN
         GLOB_THERM%INTHEAT = 1
         DO I=LFT,LLT
           J = NC1(I)
-          RHOCP   = PM(69,MXT(I))*VOL(I)
-          MCP(J)  = RHOCP+MCP(J)
-          TEMP(J) = PM(79,MXT(I))
+          RHOCP = MAT_PARAM(IMAT)%THERM%RHOCP*VOL(I)
+          RHOCP  = MAT_PARAM(IMAT)%THERM%RHOCP*VOL(I)
+          MCP(J) = RHOCP + MCP(J)
+          TEMP(J) = MAT_PARAM(IMAT)%THERM%TREF
         ENDDO
       END IF
 C--------------------------------------------------
@@ -266,7 +270,7 @@ C--------------------------------------------------
       IGTYP = IPARG(38)
       CALL DTMAIN(GEO       ,PM        ,IPM         ,NGEO    ,MXT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,GBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     GBUF%VOL, DTX, IGEO,IGTYP)
+     .     GBUF%VOL, DTX, IGEO,IGTYP,MAT_PARAM(IMAT))
 
        DO I=LFT,LLT 
          DTELEM(NDEPAR+I)=DTX(I) 

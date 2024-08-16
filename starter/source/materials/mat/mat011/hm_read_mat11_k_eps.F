@@ -308,17 +308,18 @@ C----------------------
       PM(50)  = ITYP
       PM(51)  = INOD ! USR2SYS APRES FSDCOD, IF(IFORM8==2) INOD=USR2SYS(INOD,ITABM1,MESS)
       PM(79)  = T0
-      PM(80)  = EP30
+      PM(80)  = EP20
       PM(81)  = CTM                                     
       PM(85)  = SK                                      
       PM(86)  = SE                                      
       PM(87)  = RK0/RHO0
       PM(88)  = PSH
-      PM(95) = RPR 
+      PM(95)  = RPR 
       PM(97)  = RHOC
       PM(98)  = ALP0
       PM(99)  = DC+ONE
-
+!
+      MATPARAM%THERM%TREF = T0
 C----------------------
 C     MATERIAL BUFFER
 C----------------------

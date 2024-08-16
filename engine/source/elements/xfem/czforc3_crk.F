@@ -578,18 +578,19 @@ C
 C-------------------------
 c     Thermique des coques 
 C--------------------------
-C
-        IF (JTHE /= 0) THEN
-          IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
-            CALL THERMC(JFT    ,JLT     ,PM      ,MAT  ,THK0 ,IXC  ,
-     .                  Y24    ,PX2     ,PY1     ,PY2  ,AREA ,DT1C ,
-     .                  TEMP   ,TEMPEL  ,FHEAT   ,THEM ,GLOB_THERM%THEACCFACT)
-          ELSE
-            CALL THERMC(JFT    ,JLT     ,PM      ,MAT  ,THK0 ,IXC  ,
-     .                  Y24    ,PX2     ,PY1     ,PY2  ,AREA ,DT1C ,
-     .                  TEMP   ,TEMPEL  ,DIE     ,THEM ,GLOB_THERM%THEACCFACT)
-          ENDIF 
-        ENDIF 
+      IF (JTHE /= 0) THEN
+        IF (MAT_ELEM%MAT_PARAM(MAT(1))%HEAT_FLAG == 1) THEN
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                Y24   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,FHEAT ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        ELSE
+          CALL THERMC(NEL   ,MAT_ELEM%MAT_PARAM(IMAT)%THERM,THK0 ,
+     .                Y24   ,PX2   ,PY1   ,PY2    ,AREA  ,DT1C(1)       ,
+     .                TEMP  ,TEMPEL,DIE   ,THEM   ,GLOB_THERM%THEACCFACT,
+     .                IXC   ,NIXC  ,NUMELC,NUMNOD,MVSIZ ) 
+        END IF
+      ENDIF 
 C
 C--------------------------
 C     ASSEMBLAGE des forces dans les adresses sky des noeuds phantomes

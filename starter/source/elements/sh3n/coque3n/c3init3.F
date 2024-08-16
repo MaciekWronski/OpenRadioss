@@ -313,7 +313,7 @@ C------------
      .             MCPTG(NFT+1),TEMP  ,SH3TRIM,ISUBSTACK,NLAY , 
      .             ELBUF_STR   ,STACK ,GBUF%THK_I,RNOISE,DRAPE,
      .             PERTURB,IX1   ,IX2      ,IX3    ,GLOB_THERM%NINTEMP,
-     .             X2L      ,X3L    ,Y3L   ,IDRAPE,INDX)
+     .             X2L      ,X3L    ,Y3L   ,IDRAPE,INDX,MAT_PARAM )
 C-----------------------------------------------
       CALL C3DERII(LFT,LLT,PM,GEO,PX1G,PY1G,PY2G,
      .             STIFN   ,STIFR   ,IXTG(1,NFT+1),

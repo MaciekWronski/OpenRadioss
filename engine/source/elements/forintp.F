@@ -162,6 +162,7 @@ C-----------------------------------------------
      .   ITASK,GRTH(*),IGRTH(*), LGAUGE(3,*), NGROUNC, IGROUNC(*), 
      .   IXS(NIXS,*), IRST(3,*), SOL2SPH(2,*), SPH2SOL(*), SOL2SPH_TYP(*)
       INTEGER, INTENT(IN) :: SPH_IORD1
+      my_real :: AS,BS,AL,BL
       my_real
      .   X(3,*), V(3,*), MS(*), W(*), PM(NPROPM,*), GEO(NPROPG,*),
      .   BUFMAT(*), BUFGEO(*), PLD(*)  ,
@@ -175,7 +176,6 @@ C-----------------------------------------------
       TYPE (ELBUF_STRUCT_), TARGET, DIMENSION(NGROUP) :: ELBUF_TAB
       TYPE (NLOCAL_STR_)  , TARGET :: NLOC_DMG 
       DOUBLE PRECISION SPHG_F6(4,6,NBGAUGE)
-      TYPE(MATPARAM_STRUCT_)  , DIMENSION(NUMMAT) :: MATPARAM_TAB
       TYPE(OUTPUT_), INTENT(INOUT) :: OUTPUT !< output structure
       TYPE (MAT_ELEM_) ,INTENT(INOUT) :: MAT_ELEM
       TYPE (DT_), INTENT(IN) :: DT
@@ -333,10 +333,14 @@ C-----------------------------------------------
                 IF(KXSP(2,N)>0)THEN
                   WT(N)=GBUF%TEMP(I)
                   MX   =IPART(1,IPARTSP(N))
-                  IF(WT(N)<=PM(80,MX))THEN
-                    LAMBDA(N)=PM(75,MX)+PM(76,MX)*WT(N)
+                  IF (WT(N) <= MAT_ELEM%MAT_PARAM(MX)%THERM%TMELT) THEN
+                    AS = MAT_ELEM%MAT_PARAM(MX)%THERM%AS
+                    BS = MAT_ELEM%MAT_PARAM(MX)%THERM%BS
+                    LAMBDA(N) = AS + BS*WT(N)
                   ELSE
-                    LAMBDA(N)=PM(77,MX)+PM(78,MX)*WT(N)
+                    AL = MAT_ELEM%MAT_PARAM(MX)%THERM%AL
+                    BL = MAT_ELEM%MAT_PARAM(MX)%THERM%BL
+                    LAMBDA(N) = AL + BL*WT(N)
                   END IF
                 END IF
                END DO
@@ -347,20 +351,24 @@ C-----------------------------------------------
                   INOD = KXSP(3,N)
                   WT(N)=TEMP(INOD)
                   MX   =IPART(1,IPARTSP(N))
-                  IF(WT(N)<=PM(80,MX))THEN
-                    LAMBDA(N)=PM(75,MX)+PM(76,MX)*WT(N)
+                  IF(WT(N) <= MAT_ELEM%MAT_PARAM(MX)%THERM%TMELT) THEN
+                    AS = MAT_ELEM%MAT_PARAM(MX)%THERM%AS
+                    BS = MAT_ELEM%MAT_PARAM(MX)%THERM%BS
+                    LAMBDA(N) = AS + BS*WT(N)
                   ELSE
-                    LAMBDA(N)=PM(77,MX)+PM(78,MX)*WT(N)
+                    AL = MAT_ELEM%MAT_PARAM(MX)%THERM%AL
+                    BL = MAT_ELEM%MAT_PARAM(MX)%THERM%BL
+                    LAMBDA(N) = AL + BL*WT(N)
                   END IF
                   LAMBDA(N)=LAMBDA(N)*GLOB_THERM%THEACCFACT
                 END IF
                END DO
               ELSE
-               DO I=LFT,LLT
-                N=NFT+I
-                WT(N)    =ZERO
-                LAMBDA(N)=ZERO
-               END DO
+                DO I=LFT,LLT
+                 N=NFT+I
+                 WT(N)    =ZERO
+                 LAMBDA(N)=ZERO
+                END DO
               END IF
 C-----------------------------------------------
             ENDIF

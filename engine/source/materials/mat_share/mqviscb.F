@@ -40,20 +40,19 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    i22bufbric_mod   ../common_source/modules/interfaces/cut-cell-search_mod.F
       !||    i22tri_mod       ../common_source/modules/interfaces/cut-cell-search_mod.F
       !||====================================================================
-      SUBROUTINE MQVISCB(
+      SUBROUTINE MQVISCB(MAT_PARAM,
      1   PM,      OFF,     RHO,     RK,
      2   T,       SSP,     RE,      STI,
      3   DT2T,    NELTST,  ITYPTST, AIRE,
      4   OFFG,    GEO,     PID,     VOL,
      5   VD2,     DELTAX,  VIS,     D1,
      6   D2,      D3,      PNEW,    PSH,
-     7   MAT,     NGL,     QVIS,    SSP_EQ,
+     7   IMAT,    NGL,     QVIS,    SSP_EQ,
      8   VOL0,    MSSA,    DMELS,   IGEO,
      9   FACQ0,   CONDE,   DTEL,    G_DT,
      A   IPM,     RHOREF,  RHOSP,   NEL,
      B   ITY,     ISMSTR,  JTUR,    JTHE,
      C   JSMS,    NPG   ,  GLOB_THERM)
-C============================================================================
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -61,6 +60,7 @@ C-----------------------------------------------
       USE I22BUFBRIC_MOD
       USE ALE_MOD
       use glob_therm_mod
+      USE MATPARAM_DEF_MOD
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -94,8 +94,11 @@ C-----------------------------------------------
       INTEGER, INTENT(IN) :: ISMSTR
       INTEGER, INTENT(IN) :: JTUR
       INTEGER, INTENT(IN) :: JTHE
-      INTEGER, INTENT(IN) :: JSMS,NPG
-      INTEGER NELTST,ITYPTST,PID(*),MAT(*), NGL(*),IGEO(NPROPGI,NUMGEO),G_DT,IPM(NPROPMI,NUMMAT)
+      INTEGER, INTENT(IN) :: JSMS
+      INTEGER, INTENT(IN) :: NPG
+      INTEGER, INTENT(IN) :: IMAT
+      INTEGER, INTENT(IN) :: NGL(NEL)
+      INTEGER NELTST,ITYPTST,PID(*),IGEO(NPROPGI,NUMGEO),G_DT,IPM(NPROPMI,NUMMAT)
       my_real DT2T
       my_real PM(NPROPM,NUMMAT), OFF(*), RHO(*), RK(*), T(*), RE(*),STI(*),
      .        OFFG(*),GEO(NPROPG,NUMGEO),
@@ -105,14 +108,15 @@ C-----------------------------------------------
       my_real, INTENT(IN) :: RHOREF(MVSIZ), RHOSP(MVSIZ)
       my_real, INTENT(INOUT) :: DTEL(MVSIZ)
       type (glob_therm_) ,intent(inout) :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I,J, MT, K,ICOUNT,LIST(MVSIZ),ERROR, ALE_OR_EULER, ID_MIN
+      INTEGER I,J,ICOUNT,LIST(MVSIZ),ERROR, ALE_OR_EULER, ID_MIN
       my_real DD(MVSIZ), AL(MVSIZ),
      .        DTX(MVSIZ), AD(MVSIZ), QX(MVSIZ), CX(MVSIZ), RHO0(MVSIZ), NRHO(MVSIZ),
      .        DTY(MVSIZ), QA, QB, VISI, FACQ,QAA,
-     .        CNS1, CNS2, SPH, AK1, BK1, AK2, BK2, TLI, AKK, XMU, TMU, RPR,
+     .        CNS1, CNS2, RHOCP, AK1, BK1, AK2, BK2, TLI, AKK, XMU, TMU, RPR,
      .        ATU, QAD, QBD, QAAP, DT, NUI
       my_real TIDT,TVOL,TRHO,TAIRE,  DTMIN(MVSIZ), RHOS(MVSIZ),FACPG
       my_real :: CNS1_0,CNS2_0,QAA_0
@@ -127,9 +131,8 @@ C-----------------------------------------------
 C=======================================================================
 
        ! by default don't apply /DT/NODA/* to ALE/EULER cells ; unless if /DT/NODA/ALEON is enabled (hidden card introduced for backward compatibility)
-       MT = MAT(1)
        ALE_OR_EULER = 0 
-       IF(NINT(PM(72,MT))==1 .OR. NINT(PM(72,MT))==2)ALE_OR_EULER = 1
+       IF(NINT(PM(72,IMAT))==1 .OR. NINT(PM(72,IMAT))==2)ALE_OR_EULER = 1
        IF( ALE%GLOBAL%I_DT_NODA_ALE_ON==1) ALE_OR_EULER = 0   
 
       IF(IMPL==ZERO)THEN
@@ -188,16 +191,15 @@ C
        !Numerical viscosity is managed inside sigeps51.f for law51
        !qa, qb should be 0 here otherwise viscosity will be twice.
        IF(.NOT.(IDTMINS==2.AND.JSMS/=0))THEN
-        MT = MAT(1)
         DO I=1,NEL
-          RHO0(I)=PM(1,MT)
+          RHO0(I)=PM(1,IMAT)
           NRHO(I)=SQRT(RHOREF(I)*RHO0(I))
         ENDDO
         QA =FACQ*GEO(14,PID(1))
         QB =FACQ*GEO(15,PID(1))
         CNS1_0=FACPG*GEO(16,PID(1))
         CNS2_0=FACPG*GEO(17,PID(1))
-        PSH(1:NEL)=PM(88,MT)
+        PSH(1:NEL)=PM(88,IMAT)
         PNEW(1:NEL)=ZERO
         QAA_0 = QA*QA
         DTMIN(1:NEL) = GEO(172,PID(1)) 
@@ -215,15 +217,14 @@ C           Same for VIS(I) since SOUNDSPEED is generally computed wrt RHO0, not
           QVIS(I)=RHO(I)*AD(I)*AL(I)*(QAA*AL(I)+QB*SSP(I))     
         ENDDO
        ELSE
-        MT = MAT(1)
         DO I=1,NEL
-          RHO0(I)=PM(1,MT)
+          RHO0(I)=PM(1,IMAT)
           NRHO(I)=SQRT(RHOREF(I)*RHO0(I))
         ENDDO
 
         QA =FACQ*GEO(14,PID(1))
         QB =FACQ*GEO(15,PID(1))
-        PSH(1:NEL)=PM(88,MT)
+        PSH(1:NEL)=PM(88,IMAT)
         PNEW(1:NEL)=ZERO
         QAA_0 = QA*QA
         DTMIN(1:NEL) = GEO(172,PID(1)) 
@@ -277,43 +278,41 @@ C
         ENDDO
       ENDIF
 C
-      IF(JTHE > 0)THEN
-        MT  = MAT(1)
-        SPH = PM(69,MT)
-        AK1 = PM(75,MT)
-        BK1 = PM(76,MT)
-        AK2 = PM(77,MT)
-        BK2 = PM(78,MT)
-        TLI = PM(80,MT)
-       DO I=1,NEL       
-        IF(T(I)<TLI)THEN
-         AKK=AK1+BK1*T(I)
-        ELSE
-         AKK=AK2+BK2*T(I)
-        ENDIF
-        IF(JTUR/=0)THEN
-         XMU = RHO(I)*PM(24,MT)
-         TMU = PM(81,MT)
-         RPR = PM(95,MT)
-         ATU=RPR*TMU*RK(I)*RK(I)/(MAX(EM15,RE(I)*VOL(I))*XMU)
-         AKK=AKK*(1.+ATU)
-        ENDIF
-        DTX(I) = MIN(DTX(I),HALF*DELTAX(I)*DELTAX(I)*SPH/MAX(AKK,EM20))
-       ENDDO     
+      IF (JTHE > 0) THEN
+        RHOCP = MAT_PARAM%THERM%RHOCP
+        AK1   = MAT_PARAM%THERM%AS
+        BK1   = MAT_PARAM%THERM%BS
+        AK2   = MAT_PARAM%THERM%AL
+        BK2   = MAT_PARAM%THERM%BL
+        TLI   = MAT_PARAM%THERM%TMELT
+        DO I=1,NEL       
+         IF(T(I)<TLI)THEN
+          AKK=AK1+BK1*T(I)
+         ELSE
+          AKK=AK2+BK2*T(I)
+         ENDIF
+         IF(JTUR/=0)THEN
+          XMU = RHO(I)*PM(24,IMAT)
+          TMU = PM(81,IMAT)
+          RPR = PM(95,IMAT)
+          ATU=RPR*TMU*RK(I)*RK(I)/(MAX(EM15,RE(I)*VOL(I))*XMU)
+          AKK=AKK*(1.+ATU)
+         ENDIF
+         DTX(I) = MIN(DTX(I),HALF*DELTAX(I)*DELTAX(I)*RHOCP/MAX(AKK,EM20))
+        ENDDO     
       ENDIF
 C
       IF(.NOT.(IDTMINS==2.AND.JSMS/=0))THEN
        IF(KDTSMSTR==1.AND.ISMSTR==1.OR.
      .         ((ISMSTR==2.OR.ISMSTR==12).AND.IDTMIN(1)==3))THEN
         !   KDTSMSTR==1 en version 5, par defaut.
-        MT  = MAT(1)
         DO I=1,NEL
-          RHO0(I)=PM(1,MT)
+          RHO0(I)=PM(1,IMAT)
         END DO
         DO 50 I=1,NEL
           STI(I) = ZERO
           IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) GO TO 50
-            IF(IPM(251,MT)/=0) GO TO 50
+            IF(IPM(251,IMAT)/=0) GO TO 50
           IF(N2D==0) THEN 
             TIDT = ONE/DTX(I)
             IF(OFFG(I)>ONE)THEN
@@ -357,7 +356,7 @@ C         dt2 remplace par dt2t
             DO I=1,NEL
               STI(I) = ZERO
               IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) CYCLE
-              IF(IPM(251,MT)/=0) CYCLE
+              IF(IPM(251,IMAT)/=0) CYCLE
                 TIDT = ONE/DTX(I)
                 TRHO = RHO0(I) * TIDT
                 TVOL = VOL0(I) * TIDT
@@ -367,7 +366,7 @@ C         dt2 remplace par dt2t
             DO I=1,NEL
               STI(I) = ZERO
               IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) CYCLE
-              IF(IPM(251,MT)/=0) CYCLE
+              IF(IPM(251,IMAT)/=0) CYCLE
               TIDT = ONE/DTX(I)
               TRHO = RHO(I) * TIDT
               TAIRE = AIRE(I) * TIDT
@@ -378,7 +377,7 @@ C         dt2 remplace par dt2t
            DO 60 I=1,NEL
              STI(I) = ZERO
              IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) GO TO 60
-             IF(IPM(251,MT)/=0) GO TO 60
+             IF(IPM(251,IMAT)/=0) GO TO 60
              IF(N2D==0) THEN
                TIDT = ONE/DTX(I)
                TRHO = RHO(I) * TIDT
@@ -522,14 +521,13 @@ C
       IF(IDTMINS == 2 .AND. JSMS /= 0)THEN
        IF(ISMSTR==1.OR.
      +   ((ISMSTR==2.OR.ISMSTR==12).AND.IDTMIN(1)==3))THEN
-        MT  = MAT(1)
         DO I=1,NEL
-          RHO0(I)=PM(1,MT)
+          RHO0(I)=PM(1,IMAT)
         END DO
         DO I=1,NEL
           STI(I) = ZERO
           IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) CYCLE
-          IF(IPM(251,MT)/=0) CYCLE
+          IF(IPM(251,IMAT)/=0) CYCLE
 C 1st compute stiffness
           IF(N2D==0) THEN
             TIDT = ONE/DTY(I)
@@ -562,7 +560,7 @@ c dt = 2/w = sqrt( 2*(m+dmels)/k), k=2m/dty^2
         DO I=1,NEL
           STI(I) = ZERO
           IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) CYCLE
-          IF(IPM(251,MT)/=0) CYCLE
+          IF(IPM(251,IMAT)/=0) CYCLE
 C 1st compute stiffness
           IF(N2D==0) THEN
             TIDT = ONE/DTY(I)
@@ -587,30 +585,29 @@ c dt = 2/w = sqrt( 2*(m+dmels)/k), k=2m/dty^2
         END DO
        END IF
 C
-       IF(JTHE > 0)THEN
-         MT  = MAT(1)
+       IF (JTHE > 0)THEN
          DO I=1,NEL
           IF(OFF(I)==ZERO.OR.OFFG(I)<ZERO) CYCLE
-          SPH = PM(69,MT)
-          AK1 = PM(75,MT)
-          BK1 = PM(76,MT)
-          AK2 = PM(77,MT)
-          BK2 = PM(78,MT)
-          TLI = PM(80,MT)
+          RHOCP = MAT_PARAM%THERM%RHOCP
+          AK1   = MAT_PARAM%THERM%AS
+          BK1   = MAT_PARAM%THERM%BS
+          AK2   = MAT_PARAM%THERM%AL
+          BK2   = MAT_PARAM%THERM%BL
+          TLI   = MAT_PARAM%THERM%TMELT
           IF(T(I)<TLI)THEN
            AKK=AK1+BK1*T(I)
           ELSE
            AKK=AK2+BK2*T(I)
           ENDIF
           IF(JTUR/=0)THEN
-           XMU = RHO(I)*PM(24,MT)
-           TMU = PM(81,MT)
-           RPR = PM(95,MT)
+           XMU = RHO(I)*PM(24,IMAT)
+           TMU = PM(81,IMAT)
+           RPR = PM(95,IMAT)
            ATU=RPR*TMU*RK(I)*RK(I)/(MAX(EM15,RE(I)*VOL(I))*XMU)
            AKK=AKK*(1.+ATU)
           ENDIF
           DTX(I) = MIN(DTX(I),DTFACS*HALF*DELTAX(I)*DELTAX(I)*
-     .              SPH/MAX(AKK,EM20))
+     .              RHOCP/MAX(AKK,EM20))
          ENDDO
        END IF
       END IF
@@ -639,33 +636,32 @@ C
 C--------------------------
 C     THERMAL TIME STEP
 C--------------------------    
-      IF (JTHE < 0 .AND. GLOB_THERM%IDT_THERM == 1)THEN
-        MT  = MAT(1)
-        SPH = PM(69,MT)
-        AK1 = PM(75,MT)
-        BK1 = PM(76,MT)
-        AK2 = PM(77,MT)
-        BK2 = PM(78,MT)
-        TLI = PM(80,MT)
-       DO I=1,NEL
-        IF(T(I)<TLI)THEN
-         AKK=AK1+BK1*T(I)
-        ELSE
-         AKK=AK2+BK2*T(I)
-        ENDIF
-        IF(JTUR/=0)THEN
-         XMU = RHO(I)*PM(24,MT)
-         TMU = PM(81,MT)
-         RPR = PM(95,MT)
-         ATU = RPR*TMU*RK(I)*RK(I)/(MAX(EM15,RE(I)*VOL(I))*XMU)
-         AKK = AKK*(1.+ATU)
-        ENDIF
-        AKK = AKK * GLOB_THERM%THEACCFACT
-        DT  = GLOB_THERM%DTFACTHERM*HALF*DELTAX(I)*DELTAX(I)*SPH/MAX(AKK,EM20)
-        IF(DT< GLOB_THERM%DT_THERM.AND.OFF(I)>ZERO.AND.OFFG(I)>ZERO) GLOB_THERM%DT_THERM = DT
-        CONDE(I) = FOUR*VOL(I)*AKK/(DELTAX(I)*DELTAX(I))
-        CONDE(I) = CONDE(I)*OFF(I) 
-       ENDDO
+      IF  (JTHE < 0  .AND. GLOB_THERM% IDT_THERM == 1) THEN
+        RHOCP = MAT_PARAM%THERM%RHOCP
+        AK1   = MAT_PARAM%THERM%AS
+        BK1   = MAT_PARAM%THERM%BS
+        AK2   = MAT_PARAM%THERM%AL
+        BK2   = MAT_PARAM%THERM%BL
+        TLI   = MAT_PARAM%THERM%TMELT
+        DO I=1,NEL
+         IF(T(I)<TLI)THEN
+          AKK=AK1+BK1*T(I)
+         ELSE
+          AKK=AK2+BK2*T(I)
+         ENDIF
+         IF(JTUR/=0)THEN
+          XMU = RHO(I)*PM(24,IMAT)
+          TMU = PM(81,IMAT)
+          RPR = PM(95,IMAT)
+          ATU = RPR*TMU*RK(I)*RK(I)/(MAX(EM15,RE(I)*VOL(I))*XMU)
+          AKK = AKK*(ONE+ATU)
+         ENDIF
+         AKK = AKK * GLOB_THERM%THEACCFACT
+         DT  = GLOB_THERM%DTFACTHERM*HALF*DELTAX(I)*DELTAX(I)*RHOCP/MAX(AKK,EM20)
+         IF(DT< GLOB_THERM%DT_THERM.AND.OFF(I)>ZERO.AND.OFFG(I)>ZERO) GLOB_THERM%DT_THERM = DT
+         CONDE(I) = FOUR*VOL(I)*AKK/(DELTAX(I)*DELTAX(I))
+         CONDE(I) = CONDE(I)*OFF(I) 
+        ENDDO
       ENDIF  
 C
 C--------------------------

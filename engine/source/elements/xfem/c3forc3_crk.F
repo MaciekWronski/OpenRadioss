@@ -513,11 +513,11 @@ c     Thermique des coques
 C--------------------------
         IF (JTHE > 0) THEN
           IF (MAT_ELEM%MAT_PARAM(IMAT)%HEAT_FLAG == 1) THEN
-            CALL THERM3C(NEL   ,PM(1,IMAT)  ,THK0 ,IXTG,
+            CALL THERM3C(NEL   ,MAT_ELEM%mat_param(IMAT)%therm ,THK0 ,IXTG,
      .                   PX1   ,PY1   ,PY2  ,AREA ,DTIME ,
      .                   TEMP  ,TEMPEL,FHEAT ,THEM ,GLOB_THERM%THEACCFACT)
           ELSE
-            CALL THERM3C(NEL   ,PM (1,IMAT)  ,THK0 ,IXTG,
+            CALL THERM3C(NEL   ,MAT_ELEM%mat_param(IMAT)%therm  ,THK0 ,IXTG,
      .                   PX1   ,PY1   ,PY2  ,AREA  ,DTIME ,
      .                   TEMP  ,TEMPEL,DIE  ,THEM  ,GLOB_THERM%THEACCFACT)
           END IF

@@ -88,13 +88,13 @@ C
      .          X       ,XREFC   ,IX      ,GEO      ,PM       ,
      .          MS      ,TINER   ,THKE    ,IHBE     ,PARTSAV  ,     
      .          V       ,IPART   ,MSC     ,INC      ,AREA     ,         
-     .          I8MI    ,IGEO    ,ETNOD   ,IMID     ,IPROP    ,           
+     .          I8MI    ,IGEO    ,ETNOD   ,IMAT     ,IPROP    ,           
      .          NSHNOD  ,STC     ,SH4TREE ,MCP      ,MCPS     ,         
      .          TEMP    ,MS_LAYER,ZI_LAYER,MS_LAYERC,ZI_LAYERC,
      .          MSZ2C   ,ZPLY    ,ISUBSTACK,NLAY    ,ELBUF_STR,
      .          STACK   ,THKI    ,RNOISE   ,DRAPE   ,NINTEMP  ,
      .          PERTURB ,IX1     ,IX2      ,IX3     ,IX4      ,
-     .          IDRAPE  ,INDX)
+     .          IDRAPE  ,INDX    ,MAT_PARAM)
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -103,6 +103,7 @@ C-----------------------------------------------
       USE STACK_MOD
       USE DRAPE_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD
 C----------------------------------------------
 C     INITIALISATION DES MASSES ET INERTIES NODALES
 C----------------------------------------------
@@ -130,7 +131,7 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
 C-----------------------------------------------
-      INTEGER IX(NIXC,*),IPART(*),IHBE,IMID,IPROP,
+      INTEGER IX(NIXC,*),IPART(*),IHBE,IMAT,IPROP,
      .        IGEO(NPROPGI,*),NSHNOD(*), SH4TREE(KSH4TREE,*),
      .        ISUBSTACK,NLAY,PERTURB(NPERTURB),IDRAPE
       INTEGER, DIMENSION(MVSIZ), INTENT(IN)  :: IX1,IX2,IX3,IX4
@@ -150,6 +151,7 @@ C-----------------------------------------------
       TYPE(ELBUF_STRUCT_), TARGET :: ELBUF_STR
       TYPE (STACK_PLY) :: STACK
       TYPE (DRAPE_) , DIMENSION(NUMELC_DRAPE+NUMELTG_DRAPE), TARGET :: DRAPE
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -273,8 +275,8 @@ c
             ENDDO
            ENDIF
 c      
-           RHO(I)   = PM(89,IMID)
-           RHOCP(I) = PM(69,IMID) 
+           RHO(I)   = MAT_PARAM(IMAT)%RHO0
+           RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP 
            IF(THK(I) == ZERO.AND.IGTYP/=0)THEN
               CALL ANCMSG(MSGID=495,
      .                    MSGTYPE=MSGERROR,
@@ -343,8 +345,8 @@ c
               ENDDO
             ENDIF
 c
-            RHO(I)   = PM(89,IMID)
-            RHOCP(I) = PM(69,IMID)
+            RHO(I)   = MAT_PARAM(IMAT)%RHO0
+            RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP 
             IF(THK(I) == ZERO.AND.IGTYP/=0)THEN
                CALL ANCMSG(MSGID=495,
      .                     MSGTYPE=MSGERROR,
@@ -368,7 +370,7 @@ c--------------------------------------------
             THICKT = GEO(200,IPROP)
             THKLY  = GEO(I1,IPROP)*THICKT
             MATLY  = IGEO(I2,IPROP)
-            EMS(I) = EMS(I) + PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+            EMS(I) = EMS(I) + MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
           ENDDO
           MST = RHO(I)*THK(I)*AREA(I)*FOURTH
           DMS = ABS(EMS(I)-MST)/MST
@@ -412,8 +414,8 @@ C
                THICKT = STACK%GEO(1 ,ISUBSTACK)
                THKLY  = STACK%GEO(I3 ,ISUBSTACK)*THICKT
                MATLY  = STACK%IGEO(I2,ISUBSTACK)
-               EMS(I) = EMS(I) + PM(89,MATLY)*THKLY*AREA(I)*FOURTH
-               EMS_LAYER(I,N) =  PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+               EMS(I) = EMS(I) + MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
+               EMS_LAYER(I,N) =  MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                MZI = MZI + EMS_LAYER(I,N)*STACK%GEO(I4 ,ISUBSTACK)
                IPID   = STACK%IGEO(I1, ISUBSTACK)
                ISTACK(I,N) = IGEO(102,IPID)
@@ -462,8 +464,8 @@ C
                  THICKT = STACK%GEO(1 ,ISUBSTACK)
                  THKLY  = STACK%GEO(I3 ,ISUBSTACK)*THICKT
                  MATLY  = STACK%IGEO(I2,ISUBSTACK)
-                 EMS(I) = EMS(I) + PM(89,MATLY)*THKLY*AREA(I)*FOURTH
-                 EMS_LAYER(I,N) =  PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+                 EMS(I) = EMS(I) + MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
+                 EMS_LAYER(I,N) =  MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                  MZI = MZI + EMS_LAYER(I,N)*STACK%GEO(I4 ,ISUBSTACK)
                  IPID   = STACK%IGEO(I1, ISUBSTACK)
                  ISTACK(I,N) = IGEO(102,IPID)
@@ -482,8 +484,8 @@ C
                     THKLY  = STACK%GEO(I3 ,ISUBSTACK)*THICKT ! initial      
                     THKLY  = THKLY*THINNING                                 
                     MATLY  = STACK%IGEO(I2,ISUBSTACK)                       
-                    EMS(I) = EMS(I) + PM(89,MATLY)*THKLY*AREA(I)*FOURTH     
-                    EMS_LAYER(I,N) =  PM(89,MATLY)*THKLY*AREA(I)*FOURTH     
+                    EMS(I) = EMS(I) + MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH     
+                    EMS_LAYER(I,N) =  MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH     
                     RATIO_THKLY(N) = THKLY/THK(I)                           
                     IF (N == 1) THEN                                        
                       POSLY(N) = -HALF + HALF*RATIO_THKLY(N)               
@@ -498,8 +500,8 @@ C
                     THICKT = STACK%GEO(1 ,ISUBSTACK)                        
                     THKLY  = STACK%GEO(I3 ,ISUBSTACK)*THICKT ! initial 
                     MATLY  = STACK%IGEO(I2,ISUBSTACK)                       
-                    EMS(I) = EMS(I) + PM(89,MATLY)*THKLY*AREA(I)*FOURTH     
-                    EMS_LAYER(I,N) =  PM(89,MATLY)*THKLY*AREA(I)*FOURTH     
+                    EMS(I) = EMS(I) + MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH     
+                    EMS_LAYER(I,N) =  MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH     
                     RATIO_THKLY(N) = THKLY/THK(I)                           
                     IF (N == 1) THEN                                        
                       POSLY(N) = -HALF + HALF*RATIO_THKLY(N)               
@@ -609,7 +611,7 @@ C
                     ENDDO 
              ENDIF  ! iint
              DO IT=1,NPTT
-                  EMS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                  EMS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                   EMS(I) = EMS(I) + EMS_NPTT
                   MZI = MZI + EMS_NPTT * POS_IT(IT)/THK(I)
              ENDDO 
@@ -691,7 +693,7 @@ C------
                     ENDDO 
              ENDIF  ! iint
              DO IT=1,NPTT
-                  EMS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                  EMS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                   EMS(I) = EMS(I) + EMS_NPTT
                   MZI = MZI + EMS_NPTT * POS_IT(IT)/THK(I)
              ENDDO 
@@ -748,7 +750,7 @@ C------
                  ENDIF  ! iint
                  
                  DO IT=1,NPTT
-                    EMS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                    EMS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                     EMS(I) = EMS(I) + EMS_NPTT
                     MZI = MZI + EMS_NPTT * POS_IT(IT)/THK(I)
                  ENDDO  
@@ -795,7 +797,7 @@ C------
                      ENDDO  ! nptt      
                  ENDIF  ! iint
                  DO IT=1,NPTT
-                    EMS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                    EMS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                     EMS(I) = EMS(I) + EMS_NPTT
                     MZI = MZI + EMS_NPTT * POS_IT(IT)/THK(I)
                     
@@ -889,17 +891,17 @@ C
       IF (JTHE > 0 ) THEN                                          
         IF (NINTEMP > 0 ) THEN                                   
           DO I= LFT,LLT                                          
-            IF(TEMP(IX1(I))== ZERO) TEMP(IX1(I)) = PM(79,IMID)   
-            IF(TEMP(IX2(I))== ZERO) TEMP(IX2(I)) = PM(79,IMID)   
-            IF(TEMP(IX3(I))== ZERO) TEMP(IX3(I)) = PM(79,IMID)   
-            IF(TEMP(IX4(I))== ZERO) TEMP(IX4(I)) = PM(79,IMID)   
+            IF(TEMP(IX1(I))== ZERO) TEMP(IX1(I)) = MAT_PARAM(IMAT)%THERM%TREF   
+            IF(TEMP(IX2(I))== ZERO) TEMP(IX2(I)) = MAT_PARAM(IMAT)%THERM%TREF   
+            IF(TEMP(IX3(I))== ZERO) TEMP(IX3(I)) = MAT_PARAM(IMAT)%THERM%TREF   
+            IF(TEMP(IX4(I))== ZERO) TEMP(IX4(I)) = MAT_PARAM(IMAT)%THERM%TREF   
           ENDDO                                                  
         ELSE                                                     
           DO I=LFT,LLT                                           
-            TEMP(IX1(I))=  PM(79,IMID)                           
-            TEMP(IX2(I))=  PM(79,IMID)                           
-            TEMP(IX3(I))=  PM(79,IMID)                           
-            TEMP(IX4(I))=  PM(79,IMID)                           
+            TEMP(IX1(I))=  MAT_PARAM(IMAT)%THERM%TREF                           
+            TEMP(IX2(I))=  MAT_PARAM(IMAT)%THERM%TREF                           
+            TEMP(IX3(I))=  MAT_PARAM(IMAT)%THERM%TREF                           
+            TEMP(IX4(I))=  MAT_PARAM(IMAT)%THERM%TREF                           
           ENDDO                                                  
         ENDIF                                                    
       ENDIF                                                      
@@ -926,7 +928,7 @@ C----------------------------------------------
             LAYPOS = GEO(I3,IPROP)*THICKT
             I2=IPMAT+N
             MATLY = IGEO(I2,IPROP)
-            MSL   = PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+            MSL   = MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
             XIL   = MSL*(AREA(I)/FAC+THKLY*THKLY*ONE_OVER_12+LAYPOS*LAYPOS)
             XI(I) = XI(I) + XIL
           ENDDO
@@ -955,7 +957,7 @@ C
                THKLY = STACK%GEO(I3 ,ISUBSTACK )*THICKT
                LAYPOS = STACK%GEO(I4,ISUBSTACK)*THICKT
                MATLY = STACK%IGEO(I2 ,ISUBSTACK)
-               MSL   = PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+               MSL   = MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                XIL   = MSL*(AREA(I)/FAC+THKLY*THKLY*ONE_OVER_12+LAYPOS*LAYPOS)
                XI(I) = XI(I) + XIL
              ENDDO  
@@ -974,7 +976,7 @@ C
                  THKLY = STACK%GEO(I3 ,ISUBSTACK )*THICKT
                  LAYPOS = STACK%GEO(I4,ISUBSTACK)*THICKT
                  MATLY = STACK%IGEO(I2 ,ISUBSTACK)
-                 MSL   = PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+                 MSL   = MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                  XIL   = MSL*(AREA(I)/FAC+THKLY*THKLY*ONE_OVER_12+LAYPOS*LAYPOS)
                  XI(I) = XI(I) + XIL
                ENDDO  
@@ -1000,7 +1002,7 @@ C
      .                 + HALF*(RATIO_THKLY(N)+RATIO_THKLY(N-1))          
                    ENDIF ! IF (N == 1)                                   
                    LAYPOS = POSLY(N)*THK(I)                              
-                   MSL   = PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+                   MSL   = MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                    XIL   = MSL*(AREA(I)/FAC+THKLY*THKLY*ONE_OVER_12+LAYPOS*LAYPOS)
                    XI(I) = XI(I) + XIL
                  ELSE !IP ==0
@@ -1019,7 +1021,7 @@ C
      .                 + HALF*(RATIO_THKLY(N)+RATIO_THKLY(N-1))          
                    ENDIF ! IF (N == 1)                                   
                    LAYPOS = POSLY(N)*THK(I)                              
-                   MSL   = PM(89,MATLY)*THKLY*AREA(I)*FOURTH
+                   MSL   = MAT_PARAM(MATLY)%RHO0*THKLY*AREA(I)*FOURTH
                    XIL   = MSL*(AREA(I)/FAC+THKLY*THKLY*ONE_OVER_12+LAYPOS*LAYPOS)
                    XI(I) = XI(I) + XIL         
                  ENDIF  
@@ -1087,7 +1089,7 @@ C
                ENDIF    ! iint                                                                                     
 C
                DO IT=1,NPTT                                                                                        
-                 MS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH                                                  
+                 MS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH                                                  
                  XIL = MS_NPTT*(AREA(I)/FAC+THK_IT(IT)*THK_IT(IT)*ONE_OVER_12+                                     
      .                          POS_IT(IT)*POS_IT(IT))                                                             
                  XI(I) = XI(I) + XIL                                                                               
@@ -1146,7 +1148,7 @@ C
                  ENDIF    ! iint 
 C
                  DO IT=1,NPTT
-                   MS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                   MS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                    XIL = MS_NPTT*(AREA(I)/FAC+THK_IT(IT)*THK_IT(IT)*ONE_OVER_12+
      .                            POS_IT(IT)*POS_IT(IT))
                    XI(I) = XI(I) + XIL 
@@ -1203,7 +1205,7 @@ C
                         ENDDO  ! nptt                                               
                     ENDIF    ! iint 
                     DO IT=1,NPTT
-                      MS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                      MS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                       XIL = MS_NPTT*(AREA(I)/FAC+THK_IT(IT)*THK_IT(IT)*ONE_OVER_12+
      .                                POS_IT(IT)*POS_IT(IT))
                       XI(I) = XI(I) + XIL
@@ -1251,7 +1253,7 @@ C
                         ENDDO  ! nptt                                               
                     ENDIF    ! iint 
                     DO IT=1,NPTT
-                      MS_NPTT = PM(89,MATLY)*THK_IT(IT)*AREA(I)*FOURTH
+                      MS_NPTT = MAT_PARAM(MATLY)%RHO0*THK_IT(IT)*AREA(I)*FOURTH
                       XIL = MS_NPTT*(AREA(I)/FAC+THK_IT(IT)*THK_IT(IT)*ONE_OVER_12+
      .                                POS_IT(IT)*POS_IT(IT))
                       XI(I) = XI(I) + XIL
@@ -1735,7 +1737,7 @@ C----------------------------------------------
          IF(I7STIFS/=0)THEN
           IF (IMACH/=3) THEN
            DO I=LFT,LLT
-             ET=PM(20,IMID)*THK(I)
+             ET=PM(20,IMAT)*THK(I)
              ETNOD(IX1(I))=ETNOD(IX1(I))+ET
              ETNOD(IX2(I))=ETNOD(IX2(I))+ET
              ETNOD(IX3(I))=ETNOD(IX3(I))+ET
@@ -1747,7 +1749,7 @@ C----------------------------------------------
            ENDDO
           ELSE
            DO I=LFT,LLT
-             ET=PM(20,IMID)*THK(I)
+             ET=PM(20,IMAT)*THK(I)
              STC(I)=ET
              NSHNOD(IX1(I))=NSHNOD(IX1(I))+1
              NSHNOD(IX2(I))=NSHNOD(IX2(I))+1

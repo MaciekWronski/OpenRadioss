@@ -106,7 +106,7 @@ C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER NF1, IBID, I, IGTYP, IP, NF2,NPTR,NPTS,NPTT,IR,IS,IT,
-     .        NB01,NB02,NB03,NB04,NB05,NB06, NUVAR,IDEF,
+     .        NB01,NB02,NB03,NB04,NB05,NB06, NUVAR,IDEF,IMAT,
      .        JHBE, IPID1,NLAY,L_PLA,L_SIGB
       INTEGER NC(MVSIZ,20),MAT(MVSIZ), PID(MVSIZ), NGL(MVSIZ), NCC
       CHARACTER(LEN=NCHARTITLE)::TITR1
@@ -196,10 +196,11 @@ C=======================================================================
       JHBE  = IPARG(23)
       NF1   = NFT+1
       NF2   = NF1-(NUMELS8+NUMELS10)
+      IMAT  = IXS(1,NFT+1)
 c
       DO I=LFT,LLT
-        RHOCP(I) =  PM(69,IXS(1,NFT+I))
-        TEMP0(I) =  PM(79,IXS(1,NFT+I))
+        RHOCP(I) =  MAT_PARAM(IMAT)%THERM%RHOCP
+        TEMP0(I) =  MAT_PARAM(IMAT)%THERM%TREF
       ENDDO
 C
       CALL S20COOR3(
@@ -211,7 +212,10 @@ C
 C----------------------------------------
 C     INITIALISATION DE LA THERMIQUE 
 C----------------------------------------
-      IF(JTHE /=0) CALL ATHERI(MAT,PM,GBUF%TEMP)
+      IF (JTHE /= 0) THEN
+        GBUF%TEMP(1:NEL) = MAT_PARAM(IMAT)%THERM%TREF
+!        GBUF%TEMP(1:NEL) = PM(79,IMAT)
+      END IF
 C-----------------------------
 C     POINTS D' INTEGRATION
 C-----------------------------
@@ -255,7 +259,7 @@ C----------------------------------------
           AIRE(:) = ZERO
           CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .         LBUF%EINT ,LBUF%TEMP ,LBUF%DELTAX ,LBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .         GBUF%VOL, DTX       , IGEO,IGTYP)
+     .         GBUF%VOL, DTX       , IGEO,IGTYP,MAT_PARAM(IMAT))
 C----------------------------------------
 c         INITIALISATION DES MASSES
 C
@@ -301,7 +305,7 @@ C------------------------------------------
       AIRE(:) = ZERO
       CALL DTMAIN(GEO       ,PM        ,IPM         ,PID     ,MAT     ,FV    ,
      .     GBUF%EINT ,GBUF%TEMP ,GBUF%DELTAX ,GBUF%RK ,LBUF%RE ,BUFMAT, DELTAX, AIRE, 
-     .     GBUF%VOL, DTX        , IGEO,IGTYP )
+     .     GBUF%VOL, DTX        , IGEO,IGTYP ,MAT_PARAM(IMAT))
 c
       CALL S20MASS3(
      1     MASS        ,MAS,PARTSAV,IPARTS(NF1),MSS(1,NF1),GBUF%VOL   ,

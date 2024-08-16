@@ -26,12 +26,16 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    inivoid   ../starter/source/elements/initia/inivoid.F
       !||    pinit3    ../starter/source/elements/beam/pinit3.F
       !||====================================================================
-      SUBROUTINE PMASS(GEO    ,PM      ,MS     ,TINER   ,
+      SUBROUTINE PMASS(MAT_PARAM,GEO    ,PM      ,MS     ,TINER   ,
      .                 STIFN ,STIFR  ,PARTSAV ,V      ,IPART   ,
      .                 MSP   ,INP    ,IGEO    ,STIFINT,STP     ,
      .                 X1,X2,Y1,Y2,Z1,Z2,
      .                 NC1,NC2,MXT,MXG,AREA,AL,STRP , MCP     ,
      .                 MCPP ,TEMP ,NINTEMP)
+C-----------------------------------------------
+C   M o d u l e s
+C-----------------------------------------------
+      USE MATPARAM_DEF_MOD
 C----------------------------------------------
 C     INITIALISATION DES MASSES NODALES
 C----------------------------------------------
@@ -64,27 +68,29 @@ C-----------------------------------------------
      .   Y1(MVSIZ), Y2(MVSIZ), 
      .   Z1(MVSIZ), Z2(MVSIZ), AREA(MVSIZ), AL(MVSIZ), STRP(*),
      .   MCPP(*),MCP(*),TEMP(*)
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
-      INTEGER I,IP,I1,I2,J,K,IPY,IPZ,IPA,IGTYP,NIP
+      INTEGER I,IP,I1,I2,J,K,IPY,IPZ,IPA,IGTYP,NIP,IMAT
       my_real
      .   XX,YY,ZZ,XY,YZ,ZX,
      .   STI, E, G, AA, BB, DX,DY,DZ, ARI,INI,RYI,RZI,
-     .   STIR, PHI, SHF, DSH, DMP, SL2I, FAC,LL
+     .   STIR, PHI, SHF, DSH, DMP, SL2I, FAC,LL,RHOCP
       my_real
      .   RHO(MVSIZ), EMS(MVSIZ),COEFI(MVSIZ),
-     .   TIN(MVSIZ), TIXX(MVSIZ), TIYY(MVSIZ), TIZZ(MVSIZ),RHOCP(MVSIZ)
+     .   TIN(MVSIZ), TIXX(MVSIZ), TIYY(MVSIZ), TIZZ(MVSIZ)
       my_real
      .   FACDT(MVSIZ), PHII(MVSIZ),KPHI(MVSIZ),CST,PHMAX,PHMIN,FSH(MVSIZ)
 C=======================================================================
       IPY = 200  
       IPZ = 300  
       IPA = 400
+      IMAT = MXT(1)
       DO I=LFT,LLT
         IGTYP =  nint(GEO(12,MXG(I)))
         IF (IGTYP == 18) THEN
-          RHO(I) = PM(89,MXT(I))
+          RHO(I) = MAT_PARAM(IMAT)%RHO0
           AREA(I)= ZERO
           TIYY(I)= ZERO
           TIZZ(I)= ZERO
@@ -108,15 +114,15 @@ C=======================================================================
           TIXX(I)=GEO(4,MXG(I))
           TIYY(I)=GEO(2,MXG(I))
           TIZZ(I)=GEO(18,MXG(I))
-          RHO(I) =PM (89,MXT(I))
+          RHO(I) =MAT_PARAM(IMAT)%RHO0
         ENDIF
       ENDDO
 C----------------------------------------------
 C     for dt
 C----------------------------------------------
       DO I=LFT,LLT
-        E = PM (20,MXT(I))
-        G = PM (22,MXT(I))
+        E = PM(20,MXT(I))
+        G = PM(22,MXT(I))
         CST = SIX_OVER_5*E/G
         BB  = MAX(TIYY(I),TIZZ(I),EM30)
         SL2I= AREA(I)*AL(I)**2 /BB
@@ -148,12 +154,12 @@ C----------------------------------------------
        IF (FACDT(I)<ONE) TIN(I)=PHII(I)*TIN(I)
        TIN(I)= MAX(TIN(I),RHO(I)*AL(I)/TWO*TIXX(I))
       ENDDO
-       IF( JTHE > 0 ) THEN
-           DO I=LFT,LLT
-              RHOCP(I) = PM(69,MXT(I))
-              MCPP(I)  = RHOCP(I)*AL(I)*AREA(I)* HALF
-           ENDDO
-       ENDIF
+      IF (JTHE > 0) THEN
+          RHOCP = MAT_PARAM(IMAT)%THERM%RHOCP
+          DO I=LFT,LLT
+             MCPP(I) = RHOCP*AL(I)*AREA(I)* HALF
+          ENDDO
+      ENDIF
 C----------------------------------------------
 C     INITIALISATION DES MASSES NODALES + RHOCP 
 C----------------------------------------------
@@ -192,14 +198,14 @@ C----------------------------------------------
       IF(I7STIFS/=0)THEN
        IF (IMACH/=3) THEN
         DO I=LFT,LLT
-          E = PM (20,MXT(I))
+          E = PM(20,MXT(I))
           STI = E * AREA(I) / AL(I)
           STIFINT(NC1(I))=STIFINT(NC1(I))+STI
           STIFINT(NC2(I))=STIFINT(NC2(I))+STI
         ENDDO
        ELSE
         DO I=LFT,LLT
-          E = PM (20,MXT(I))
+          E = PM(20,MXT(I))
           STI = E * AREA(I) / AL(I)
           STP(I) = STI
         ENDDO
@@ -209,8 +215,8 @@ C----------------------------------------------
 C     INITIALISATION DES RIGIDITES NODALES
 C----------------------------------------------
       DO I=LFT,LLT
-       E = PM (20,MXT(I))
-       G = PM (22,MXT(I))
+       E = PM(20,MXT(I))
+       G = PM(22,MXT(I))
 C
        DMP =MAX(GEO(16,MXG(I)),GEO(17,MXG(I)))
        DMP =DMP*SQRT(TWO)
@@ -256,16 +262,17 @@ C
      .     (V(1,I1)*V(1,I1)+V(2,I1)*V(2,I1)+V(3,I1)*V(3,I1)
      .     +V(1,I2)*V(1,I2)+V(2,I2)*V(2,I2)+V(3,I2)*V(3,I2))
       ENDDO
-      IF (JTHE > 0 ) THEN                                          
+!
+      IF (JTHE /= 0 ) THEN                                          
         IF (NINTEMP > 0 ) THEN                                   
           DO I= LFT,LLT                                          
-            IF(TEMP(NC1(I))== ZERO) TEMP(NC1(I)) = PM(79,MXT(I))   
-            IF(TEMP(NC2(I))== ZERO) TEMP(NC2(I)) = PM(79,MXT(I))
+            IF(TEMP(NC1(I))== ZERO) TEMP(NC1(I)) = MAT_PARAM(IMAT)%THERM%TREF   
+            IF(TEMP(NC2(I))== ZERO) TEMP(NC2(I)) = MAT_PARAM(IMAT)%THERM%TREF 
           ENDDO                                                  
         ELSE                                          
           DO I=LFT,LLT                                           
-            TEMP(NC1(I)) = PM(79,MXT(I))                           
-            TEMP(NC2(I)) = PM(79,MXT(I))                         
+            TEMP(NC1(I)) = MAT_PARAM(IMAT)%THERM%TREF                          
+            TEMP(NC2(I)) = MAT_PARAM(IMAT)%THERM%TREF                      
           ENDDO                                                  
         ENDIF                                                    
       ENDIF          

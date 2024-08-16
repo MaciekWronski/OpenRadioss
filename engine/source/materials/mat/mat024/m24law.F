@@ -35,7 +35,7 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    elbufdef_mod     ../common_source/modules/mat_elem/elbufdef_mod.F90
       !||    glob_therm_mod   ../common_source/modules/mat_elem/glob_therm_mod.F90
       !||====================================================================
-      SUBROUTINE M24LAW(
+      SUBROUTINE M24LAW(MAT_PARAM,
      1   LBUF,    PM,      OFF,     SIG,
      2   EINT,    RHO,     QOLD,    VOL,
      3   STIFN,   DT2T,    NELTST,  ITYPTST,
@@ -59,6 +59,7 @@ C   M o d u l e s
 C-----------------------------------------------
       USE ELBUFDEF_MOD            
       use glob_therm_mod
+      USE MATPARAM_DEF_MOD
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -100,6 +101,7 @@ C-----------------------------------------------
       my_real, DIMENSION(MVSIZ,6), INTENT(INOUT) :: SVIS
       TYPE(L_BUFEL_)  :: LBUF     
       type (glob_therm_) ,intent(inout) :: glob_therm
+      TYPE(MATPARAM_STRUCT_) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -147,14 +149,14 @@ C------------
       ENDDO
 C
       IF(JSPH==0)THEN
-       CALL MQVISCB(
+       CALL MQVISCB(MAT_PARAM,
      1   PM,      OFF,     RHO,     BID1,
      2   BID2,    SSP,     BID3,    STIFN,
      3   DT2T,    NELTST,  ITYPTST, AIRE,
      4   OFFG,    GEO,     PID,     VOLN,
      5   VD2,     DELTAX,  VIS,     D1,
      6   D2,      D3,      PNEW,    PSH,
-     7   MAT,     NGL,     Q,       SSP_EQ,
+     7   MAT(1),  NGL,     Q,       SSP_EQ,
      8   VOL,     MSSA,    DMELS,   IBID,
      9   FACQ0,   CONDE,   DTEL,    G_DT,
      A   IPM,     RHOREF,  RHOSP,   NEL,

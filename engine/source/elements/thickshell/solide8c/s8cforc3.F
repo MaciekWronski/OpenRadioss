@@ -1144,7 +1144,7 @@ C--------------------------
           IF (JTHE < 0) THEN
             IF (MAT_ELEM%MAT_PARAM(MX)%HEAT_FLAG == 1) THEN
               CALL S8ETHERM(
-     1             PM,      MX ,    VOLN,    NI,
+     1             MAT_ELEM%MAT_PARAM(MX)%THERM,VOLN,    NI,
      2             NC1,     NC2,     NC3,     NC4,
      3             NC5,     NC6,     NC7,     NC8,
      4             PX1,     PX2,     PX3,     PX4,
@@ -1158,7 +1158,7 @@ C--------------------------
      C             IPARTS,  LBUF%VOL,NEL,GLOB_THERM%THEACCFACT)
             ELSE
               CALL S8ETHERM(
-     1             PM,      MX ,    VOLN,    NI,
+     1             MAT_ELEM%MAT_PARAM(MX)%THERM,VOLN,    NI,
      2             NC1,     NC2,     NC3,     NC4,
      3             NC5,     NC6,     NC7,     NC8,
      4             PX1,     PX2,     PX3,     PX4,

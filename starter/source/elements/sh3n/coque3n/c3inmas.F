@@ -42,7 +42,8 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
      .                   MCPTG  , TEMP ,SH3TRIM,ISUBSTACK,NLAY   ,
      .                   ELBUF_STR, STACK,THKI ,RNOISE   ,DRAPE  ,
      .                   PERTURB,IX1   ,IX2    ,IX3      ,NINTEMP,
-     .                   X2     ,X3     ,Y3    ,IDRAPE   ,INDX)
+     .                   X2     ,X3     ,Y3    ,IDRAPE   ,INDX   ,
+     .                   MAT_PARAM )
 C-----------------------------------------------
 C   M o d u l e s
 C-----------------------------------------------
@@ -51,6 +52,7 @@ C-----------------------------------------------
       USE STACK_MOD
       USE DRAPE_MOD
       USE NAMES_AND_TITLES_MOD , ONLY : NCHARTITLE
+      USE MATPARAM_DEF_MOD
 C----------------------------------------------
 C     INITIALISATION DES MASSES ET INERTIES NODALES
 C-----------------------------------------------
@@ -91,6 +93,7 @@ C-----------------------------------------------
       TYPE(ELBUF_STRUCT_), TARGET :: ELBUF_STR
       TYPE (STACK_PLY) :: STACK
       TYPE (DRAPE_), DIMENSION(NUMELC_DRAPE + NUMELTG_DRAPE), TARGET :: DRAPE
+      TYPE(MATPARAM_STRUCT_) ,DIMENSION(NUMMAT) ,INTENT(INOUT) :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -210,8 +213,8 @@ c
              ENDDO
             ENDIF
 c
-            RHO(I)= PM(89,IMAT)
-            RHOCP(I) =  PM(69,IMAT) 
+            RHO(I)   = MAT_PARAM(IMAT)%RHO0
+            RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP 
             IF(THK(I)==ZERO.AND.IGTYP/=0)THEN
                CALL ANCMSG(MSGID=495,
      .                     MSGTYPE=MSGERROR,
@@ -276,11 +279,10 @@ c
              ENDDO
             ENDIF
 c
-            RHO(I)= PM(89,IMAT)
-            RHOCP(I) =  PM(69,IMAT) 
-            IF(THK(I)==ZERO.AND.IGTYP/=0)THEN
-               CALL ANCMSG(MSGID=495,
-     .                     MSGTYPE=MSGERROR,
+            RHO(I)   = MAT_PARAM(IMAT)%RHO0
+            RHOCP(I) = MAT_PARAM(IMAT)%THERM%RHOCP 
+            IF (THK(I)==ZERO.AND.IGTYP/=0) THEN
+               CALL ANCMSG(MSGID=495, MSGTYPE=MSGERROR,
      .                     ANMODE=ANINFO_BLIND_1,
      .                     I1=IXTG(6,I))
             ENDIF  

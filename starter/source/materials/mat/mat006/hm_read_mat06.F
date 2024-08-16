@@ -163,7 +163,8 @@ C-----------------------------------------------
       PM(80)=INFINITY
       PM(88)=PSH      
       PM(104)=C0 - PSH
-      
+!
+      MATPARAM%THERM%TMELT = INFINITY
 !-------------------------------------------------------------
       MATPARAM%IEOS = IEOS    ! linear by default
       IPM(4)        = IEOS    ! keep this temporarily for output and fluid sections

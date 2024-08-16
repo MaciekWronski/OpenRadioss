@@ -5433,7 +5433,7 @@ C-----------------
 C  Global Mat for PID 11 and PID51 (for shell)
 C-------------------------
 !!      IF(IGLOBMAT > 0) THEN ! global flag can be added
-      CALL GLOBMAT(IGEO  , GEO   ,PM ,STACK%PM, STACK%GEO,STACK%IGEO)
+      CALL GLOBMAT(MAT_ELEM%MAT_PARAM,IGEO  , GEO   ,PM ,STACK%PM, STACK%GEO,STACK%IGEO)
 !!      ENDIF
 C-------------------------
 C Fill index to renumber Solid elements after Domain Decomposition
