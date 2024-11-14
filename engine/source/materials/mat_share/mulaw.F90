@@ -219,6 +219,7 @@
       use sigeps100_mod
       use sigeps125_mod
       use sigeps126_mod
+      use sigeps128s_mod
       use prop_param_mod
       use dt_mod
       use glob_therm_mod
@@ -476,6 +477,7 @@
           character option*256
           integer size,nvareos,nvarvis
           integer :: nrate,nodadt
+          integer :: k1,k2,k3,k4,k5,k6
           my_real :: fisokin
           my_real, dimension(nel), target :: vecnul
           my_real, dimension(:), pointer  :: sigbxx,sigbyy,sigbzz,sigbxy,sigbyz,sigbzx
@@ -555,6 +557,14 @@
           ibidon2 = 0
           ibidon3 = 0
           ibidon4 = 0
+          ! strain/stress table indexes
+          k1 = 1
+          k2 = nel+1
+          k3 = nel*2+1
+          k4 = nel*3+1
+          k5 = nel*4+1
+          k6 = nel*5+1
+
           ilaw_user = ipm(217, imat)
           isvis = igeo(35,pid(1))
           if (impl_s >0.and.idyna == 0) isvis = 0
@@ -1604,6 +1614,18 @@
             &sv1 ,sv2 ,sv3 ,sv4  ,sv5  ,sv6 ,&
             &ssp ,vis ,uvar,off  ,ismstr,et ,&
             &ihet,gbuf%off ,epsth3,iexpan, lbuf%epsa)
+!
+          elseif (mtn == 93) then
+            call sigeps93(nel    ,npar   ,nuvar  ,nfunc  ,ifunc  ,&
+            &npf    ,tf     ,tt     ,dt1    ,uparam0 ,&
+            &ep1    ,ep2    ,ep3    ,ep4    ,ep5    ,ep6    ,&
+            &de1    ,de2    ,de3    ,de4    ,de5    ,de6    ,&
+            &so1    ,so2    ,so3    ,so4    ,so5    ,so6    ,&
+            &s1     ,s2     ,s3     ,s4     ,s5     ,s6     ,&
+            &ssp    ,defp   ,uvar   ,rho0   ,off    ,&
+            &et     ,sigy   ,lbuf%seq,epsd  ,asrate ,&
+            &nvartmp,vartmp ,dpla   )
+!
           elseif (mtn == 94) then
             call sigeps94(nel ,npar,nuvar,nfunc,ifunc,&
             &npf ,tf  ,tt,dt1,uparam0,&
@@ -1616,16 +1638,7 @@
             &sv1 ,sv2 ,sv3 ,sv4  ,sv5  ,sv6 ,&
             &ssp ,vis ,uvar,off  ,ismstr,et ,&
             &ihet,gbuf%off,epsth3,iexpan )
-          elseif (mtn == 93) then
-            call sigeps93(nel    ,npar   ,nuvar  ,nfunc  ,ifunc  ,&
-            &npf    ,tf     ,tt     ,dt1    ,uparam0 ,&
-            &ep1    ,ep2    ,ep3    ,ep4    ,ep5    ,ep6    ,&
-            &de1    ,de2    ,de3    ,de4    ,de5    ,de6    ,&
-            &so1    ,so2    ,so3    ,so4    ,so5    ,so6    ,&
-            &s1     ,s2     ,s3     ,s4     ,s5     ,s6     ,&
-            &ssp    ,defp   ,uvar   ,rho0   ,off    ,&
-            &et     ,sigy   ,lbuf%seq,epsd  ,asrate ,&
-            &nvartmp,vartmp ,dpla   )
+!
           elseif (mtn == 95) then
             ir = int (bufmat(iadbuf+20))
             if (ir > zero) then
@@ -1982,6 +1995,36 @@
             &s1       ,s2       ,s3       ,s4       ,s5       ,s6       ,&
             &epsd     ,lbuf%dmg ,ssp      ,off      ,inloc    ,&
             &varnl    ,l_planl  ,lbuf%planl)
+!
+          elseif (mtn == 128) then
+
+!            fisokin = matparam%uparam(18)
+!            if (fisokin > 0) then
+!              sigbxx => lbuf%sigb(k1:nel)
+!              sigbyy => lbuf%sigb(k2:nel*2)
+!              sigbzz => lbuf%sigb(k3:nel*3)
+!              sigbxy => lbuf%sigb(k4:nel*4)
+!              sigbyz => lbuf%sigb(k5:nel*5)
+!              sigbzx => lbuf%sigb(k6:nel*6)
+!            else
+!              vecnul(1:nel) = zero
+!              sigbxx => vecnul(1:nel)
+!              sigbyy => vecnul(1:nel)
+!              sigbzz => vecnul(1:nel)
+!              sigbxy => vecnul(1:nel)
+!              sigbyz => vecnul(1:nel)
+!              sigbzx => vecnul(1:nel)
+!            endif
+
+            call sigeps128s(mat_elem%mat_param(imat)    ,                      &
+                 nel      ,nuvar    ,nvartmp  ,uvar     ,vartmp   ,dt1      ,  &
+                 de1      ,de2      ,de3      ,de4      ,de5      ,de6      ,  &
+                 so1      ,so2      ,so3      ,so4      ,so5      ,so6      ,  &
+!                 sigbxx   ,sigbyy   ,sigbzz   ,sigbxy   ,sigbyz   ,sigbzx   ,  &
+                 s1       ,s2       ,s3       ,s4       ,s5       ,s6       ,  &
+                 lbuf%seq ,sigy     ,et       ,defp     ,dpla     ,epsd     ,  &
+                 ssp      ,off      )
+
 !
           elseif (mtn == 187) then !barlat 2000
             call sigeps187(nel   ,npar  ,nuvar ,nfunc ,ifunc ,&

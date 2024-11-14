@@ -30,7 +30,12 @@ Copyright>        commercial version may interest you: https://www.altair.com/ra
       !||    mstiforthv   ../engine/source/elements/solid/solidez/mstiforthv.F
       !||====================================================================
       SUBROUTINE MMODUL(JFT     ,JLT     ,PM    ,MAT    ,MTN    ,
-     .                  GAMA    ,UPARAM  ,CC    ,CG     ,G33    )
+     .                  GAMA    ,UPARAM  ,CC    ,CG     ,G33    ,
+     .                  MAT_PARAM)
+! ---------------------------------------------------------------------------------
+!                modules
+! ---------------------------------------------------------------------------------
+      use matparam_def_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -52,6 +57,7 @@ C     REAL
       my_real
      .   PM(NPROPM,*),CC(MVSIZ,3,3),UPARAM(*),
      .   GAMA(MVSIZ,6),CG(MVSIZ,3,3),G33(MVSIZ,3,3)
+      TYPE(MATPARAM_STRUCT_) ,INTENT(IN)   :: MAT_PARAM
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
@@ -208,7 +214,24 @@ C----- w/o armature :--> isotropic
          G3(I,3)   = UPARAM(12)
         ENDDO
         CALL MSTIFORTHV(JFT    ,JLT   ,QC  ,QCG  ,QGC    ,
-     .                  QG     ,CC    ,G3  ,G33  ,CG     )        
+     .                  QG     ,CC    ,G3  ,G33  ,CG     )  
+      ELSEIF (MTN == 128) THEN
+        NU    = MAT_PARAM%NU
+        LAMDA = THREE*NU*MAT_PARAM%BULK/(ONE+NU)
+        DO I=JFT,JLT
+         CC(I,1,1) = LAMDA + TWO*MAT_PARAM%SHEAR
+         CC(I,2,2) = CC(I,1,1)
+         CC(I,3,3) = CC(I,1,1)
+         CC(I,1,2) = LAMDA
+         CC(I,2,3) = LAMDA
+         CC(I,1,3) = LAMDA
+         G3(I,1)   = MAT_PARAM%SHEAR
+         G3(I,2)   = MAT_PARAM%SHEAR
+         G3(I,3)   = MAT_PARAM%SHEAR
+        ENDDO
+        CALL MSTIFORTHV(JFT    ,JLT   ,QC  ,QCG  ,QGC    ,
+     .                  QG     ,CC    ,G3  ,G33  ,CG     )       
+
        ELSEIF (MTN==107) THEN
         DO I=JFT,JLT
           MX = MAT(I)

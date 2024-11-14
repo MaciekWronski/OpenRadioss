@@ -423,6 +423,9 @@ C-------------------------------------------------------------------
       CALL HM_OPTION_COUNT('/STAMPING',ISTAMPING)
       IF(ISTAMPING > 0 ) ISTAMPING = 1
 C-------------------------------------------------------------------
+
+      CALL HM_DEBUG_PRINT_OPTION('/MAT')
+
       ICRASH = 0
 C-------------------------------------------------------------------
 C     READING DEFAULT VALUES FOR SHELLS, SOLIDS, INTERFACES ...
