@@ -2684,12 +2684,12 @@
 !
               else if (irupt == 43) then
 !  --- syazwan failure model
-                call fail_syazwan_s(&
-                &llt     ,uparamf,nparam,uvarf    ,nvarf     ,&
-                &tt      ,ngl         ,ipg      ,dpla    ,tdel      ,&
-                &ss1     ,ss2         ,ss3      ,ss4     ,ss5       ,ss6      ,&
-                &dfmax   ,nfunc       ,ifunc    ,el_len  ,off       ,&
-                &npf     ,tf          ,gbuf%uelr,npg     ,lbuf%off  )
+                call fail_syazwan_s(mat_elem%mat_param(imat)%fail(ir),&
+                llt      ,nvarf    ,nvartmp  ,uvarf   ,vartmp    ,&
+                tt       ,ngl      ,ipg      ,dpla    ,tdel      ,&
+                ss1      ,ss2      ,ss3      ,ss4     ,ss5       ,ss6      ,&
+                dfmax    ,el_len   ,off      ,&
+                gbuf%uelr,npg      ,lbuf%off )
 !
               else if (irupt == 44) then
 ! --- tsai-wu failure model

@@ -29,13 +29,18 @@ Copyright>        https://www.siemens.com/en-us/products/simcenter/mechanical-si
 !||--- calls      -----------------------------------------------------
 !||    finter           ../engine/source/tools/curve/finter.F
 !||====================================================================
-      SUBROUTINE FAIL_SYAZWAN_C(
-     1           NEL      ,UPARAM   ,NUPARAM  ,UVAR     ,NUVAR    ,
+      SUBROUTINE FAIL_SYAZWAN_C(FAIL,
+     1           NEL      ,NUVAR    ,NVARTMP  ,UVAR     ,VARTMP   ,
      2           TIME     ,NGL      ,IPT      ,DPLA     ,PLA      ,
      3           SIGNXX   ,SIGNYY   ,SIGNXY   ,SIGNYZ   ,SIGNZX   ,
      4           EPSXX    ,EPSYY    ,EPSXY    ,EPSYZ    ,EPSZX    ,
-     5           DFMAX    ,NFUNC    ,IFUNC    ,ALDT     ,FOFF     ,
-     6           IPG      ,DMG_FLAG ,DMG_SCALE,NPF      ,TF       )
+     5           DFMAX    ,ALDT     ,FOFF     ,
+     6           IPG      ,DMG_FLAG ,DMG_SCALE)
+C-----------------------------------------------
+C    Modules
+C-----------------------------------------------
+      use fail_param_mod
+      use table_mat_vinterp_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
 C-----------------------------------------------
@@ -43,72 +48,63 @@ C-----------------------------------------------
 C-----------------------------------------------
 C   G l o b a l   P a r a m e t e r s
 C-----------------------------------------------
-#include      "mvsiz_p.inc"
 #include      "units_c.inc"
 #include      "comlock.inc"
 #include      "com01_c.inc"
-#include      "tabsiz_c.inc"
 C-----------------------------------------------
 C   I N P U T   A r g u m e n t s
 C-----------------------------------------------
-      INTEGER, INTENT(IN) :: 
-     .   NEL    ,NUPARAM,NUVAR  ,IPT    ,NFUNC  ,
-     .   IPG    ,NGL(NEL),IFUNC(NFUNC)
+      INTEGER, INTENT(IN) :: NEL,NVARTMP,NUVAR,IPT,IPG
+      INTEGER :: NGL(NEL)
       my_real, INTENT(IN) ::
-     .   TIME   ,UPARAM(NUPARAM),DPLA(NEL) ,PLA(NEL),
+     .   TIME   ,DPLA(NEL) ,PLA(NEL),
      .   ALDT(NEL),EPSXX(NEL)   ,EPSYY(NEL),
      .   EPSXY(NEL),EPSYZ(NEL)  ,EPSZX(NEL)
+      type (fail_param_) ,intent(inout) :: fail    !< failure model data structure
 C-----------------------------------------------
 C   I N P U T   O U T P U T   A r g u m e n t s 
 C-----------------------------------------------
-      INTEGER, INTENT(INOUT) :: 
-     .   DMG_FLAG,FOFF(NEL)
+      INTEGER, INTENT(INOUT) :: DMG_FLAG,FOFF(NEL)
+      INTEGER, dimension(nel,nvartmp) ,INTENT(INOUT) :: VARTMP
       my_real, INTENT(INOUT) :: 
      .   UVAR(NEL,NUVAR),DFMAX(NEL),DMG_SCALE(NEL)      ,
-     .   SIGNXX(NEL),SIGNYY(NEL),SIGNXY(NEL),SIGNYZ(NEL),
-     .   SIGNZX(NEL)
-C-----------------------------------------------
-C   VARIABLES FOR FUNCTION INTERPOLATION 
-C-----------------------------------------------
-      INTEGER, INTENT(IN) :: NPF(SNPC)
-      my_real, INTENT(IN) :: TF(STF)
-      my_real
-     .         FINTER
-      EXTERNAL FINTER
+     .   SIGNXX(NEL),SIGNYY(NEL),SIGNXY(NEL),SIGNYZ(NEL),SIGNZX(NEL)
 C-----------------------------------------------
 C   L o c a l   V a r i a b l e s
 C-----------------------------------------------
       INTEGER I,J,NINDX,INST,DINIT,IFORM
-      INTEGER, DIMENSION(MVSIZ) :: INDX
+      INTEGER, DIMENSION(NEL) :: INDX
       my_real
      .   C1     ,C2     ,C3     ,C4     ,C5     ,C6     ,
-     .   N_VAL  ,SOFTEXP,REF_LEN,REG_SCALE,DAM_SF,MAX_DAM
+     .   N_VAL  ,SOFTEXP,REF_LEN,DAM_SF,MAX_DAM
       my_real
-     .   LAMBDA ,DYDX   ,FAC(NEL),DC(NEL),P      ,SVM    ,
+     .   FAC(NEL),DC(NEL),P      ,SVM    ,
      .   TRIAX  ,COS3THETA,LODEP ,EPSFAIL,E12    ,S1     ,
      .   S2     ,Q      ,EMAJ    ,EMIN   ,BETA   ,ALPHA  ,
      .   EQUA1  ,EQUA2  ,E1      ,EPS_C  ,DINST(NEL),EPFMIN,
      .   DELTA  ,DENOM
+      my_real, DIMENSION(NEL) :: LAMBDA,DYDX
       !=======================================================================
       ! - INITIALISATION OF COMPUTATION ON TIME STEP
       !=======================================================================
       ! Recovering failure criterion parameters
-      C1        = UPARAM(1) 
-      C2        = UPARAM(2) 
-      C3        = UPARAM(3)
-      C4        = UPARAM(4) 
-      C5        = UPARAM(5)
-      C6        = UPARAM(6)
-      IFORM     = NINT(UPARAM(7))
-      DINIT     = NINT(UPARAM(8))
-      DAM_SF    = UPARAM(9)
-      MAX_DAM   = UPARAM(10)
-      INST      = NINT(UPARAM(11))
-      N_VAL     = UPARAM(12) 
-      SOFTEXP   = UPARAM(13) 
-      REF_LEN   = UPARAM(14) 
-      REG_SCALE = UPARAM(15) 
-      EPFMIN    = UPARAM(16)
+      !
+      IFORM     = FAIL%IPARAM(1)  
+      DINIT     = FAIL%IPARAM(2)  
+      INST      = FAIL%IPARAM(3)  
+!
+      C1        = FAIL%UPARAM(1) 
+      C2        = FAIL%UPARAM(2) 
+      C3        = FAIL%UPARAM(3)
+      C4        = FAIL%UPARAM(4) 
+      C5        = FAIL%UPARAM(5)
+      C6        = FAIL%UPARAM(6)
+      DAM_SF    = FAIL%UPARAM(7)
+      MAX_DAM   = FAIL%UPARAM(8)
+      N_VAL     = FAIL%UPARAM(9) 
+      SOFTEXP   = FAIL%UPARAM(10) 
+      REF_LEN   = FAIL%UPARAM(11) 
+      EPFMIN    = FAIL%UPARAM(12)
 c
       ! Set flag for stress softening
       IF (INST > 0) DMG_FLAG = 1
@@ -117,12 +113,9 @@ c
       ! the element size scaling factor
       IF (UVAR(1,1) == ZERO) UVAR(1:NEL,1) = ONE
       IF (UVAR(1,3) == ZERO) THEN
-        IF (IFUNC(1) > 0) THEN 
-          DO I=1,NEL
-            LAMBDA    = ALDT(I)/REF_LEN
-            UVAR(I,3) = FINTER(IFUNC(1),LAMBDA,NPF,TF,DYDX)
-            UVAR(I,3) = UVAR(I,3)*REG_SCALE
-          ENDDO
+        IF (fail%table4d(1)%notable > 0) THEN 
+          LAMBDA(1:nel) = ALDT(1:nel)/REF_LEN
+          call table_mat_vinterp(fail%table4d(1),nel,nel,vartmp,lambda,uvar(1:nel,3:3),dydx)
         ELSE 
           UVAR(1:NEL,3) = ONE
         ENDIF

@@ -36,9 +36,8 @@ Copyright>        https://www.siemens.com/en-us/products/simcenter/mechanical-si
 !||    message_mod              ../starter/share/message_module/message_mod.F
 !||    submodel_mod             ../starter/share/modules1/submodel_mod.F
 !||====================================================================
-      SUBROUTINE HM_READ_FAIL_SYAZWAN(
-     .           FAIL    ,MAT_ID   ,FAIL_ID  ,IRUPT    ,
-     .           TITR    ,LSUBMODEL,UNITAB   )
+      SUBROUTINE HM_READ_FAIL_SYAZWAN(FAIL    ,TITLE    ,MAT_ID   ,FAIL_ID  ,IRUPT    ,
+     .                                NTABLE  ,TABLE    ,LSUBMODEL,UNITAB   )
 C-----------------------------------------------
 c    ROUTINE DESCRIPTION :
 c    Syazwan failure model
@@ -50,6 +49,9 @@ C-----------------------------------------------
       USE MESSAGE_MOD
       USE SUBMODEL_MOD
       USE HM_OPTION_READ_MOD
+      use table_mod
+      use func_table_copy_mod
+      use names_and_titles_mod , only : nchartitle
       use my_alloc_mod
 C-----------------------------------------------
 C   I m p l i c i t   T y p e s
@@ -65,7 +67,9 @@ C-----------------------------------------------
       INTEGER            ,INTENT(IN) :: FAIL_ID         ! failure model ID
       INTEGER            ,INTENT(IN) :: MAT_ID          ! material law ID
       INTEGER            ,INTENT(IN) :: IRUPT           ! failure model type number
-      CHARACTER          ,INTENT(IN) :: TITR*500        ! material model title
+      integer            ,intent(in) :: ntable          !< number of function tables in Radioss input
+      character(len=nchartitle) ,intent(in)       :: title      !< material model title
+      type(ttable) ,dimension(ntable) ,intent(in) :: table      !< function tables in Radioss input
       TYPE(UNIT_TYPE_)   ,INTENT(IN) :: UNITAB          ! table of input units
       TYPE(SUBMODEL_DATA),INTENT(IN) :: LSUBMODEL(*)    ! submodel table
       TYPE(FAIL_PARAM_)  ,INTENT(INOUT) :: FAIL         ! failure model data structure
@@ -75,12 +79,13 @@ C-----------------------------------------------
       my_real C1,C2,C3,C4,C5,C6
       my_real DAM_SF,MAX_DAM,N_VAL,SOFTEXP
       my_real REF_LEN,REF_SIZ_UNIT,REG_SCALE
-      my_real 
-     .        EPFMIN,EPF_COMP,
-     .        EPF_SHEAR,EPF_TENS,EPF_PLSTRN,EPF_BIAX
+      my_real EPFMIN,EPF_COMP,EPF_SHEAR,EPF_TENS,EPF_PLSTRN,EPF_BIAX
       my_real TRIAX,LODEP,COS3THETA,EPSFAIL
+      integer, dimension(1) :: func_id   
+      my_real :: x1scale,x2scale
+      my_real, dimension(1) :: x2vect,yscale      
       DOUBLE PRECISION :: EPF(6),MAT(6,6)
-      INTEGER ICARD,IFORM,DINIT,INST,REG_FUNC,INFO,IPIV(6),I,FAILIP
+      INTEGER ICARD,IFORM,DINIT,INST,REG_FUNC,INFO,IPIV(6),I,FAILIP,NFUNC,IERROR
       LOGICAL :: IS_AVAILABLE,IS_ENCRYPTED,NEGATIVE
 C-----------------------------------------------    
       IS_ENCRYPTED = .FALSE.
@@ -245,7 +250,7 @@ C--------------------------------------------------
       IF (NEGATIVE) THEN 
         CALL ANCMSG(MSGID=2091, MSGTYPE=MSGWARNING, ANMODE=ANINFO_BLIND_1,
      .              I1=MAT_ID,
-     .              C1=TITR,
+     .              C1=TITLE,
      .              R1=EPFMIN)
       ENDIF
       ! Default value for NUMFIP
@@ -256,37 +261,51 @@ C--------------------------------------------------
       FAIL%KEYWORD = 'SYAZWAN' 
       FAIL%IRUPT   = IRUPT 
       FAIL%FAIL_ID = FAIL_ID 
-      FAIL%NUPARAM = 17
-      FAIL%NIPARAM = 0
+      FAIL%NUPARAM = 12
+      FAIL%NIPARAM = 4
       FAIL%NUVAR   = 3
-      FAIL%NFUNC   = 1
+      FAIL%NVARTMP = 1
+      FAIL%NFUNC   = 0
       FAIL%NTABLE  = 0
+      FAIL%NTABLE4D= 1
       FAIL%NMOD    = 0
 c            
       call my_alloc(FAIL%UPARAM, FAIL%NUPARAM, "FAIL%UPARAM")
       call my_alloc(FAIL%IPARAM, FAIL%NIPARAM, "FAIL%IPARAM")
-      call my_alloc(FAIL%IFUNC, FAIL%NFUNC, "FAIL%IFUNC")
-      call my_alloc(FAIL%TABLE, FAIL%NTABLE, "FAIL%TABLE")
-c
-      FAIL%IFUNC(1) = REG_FUNC
-c
+      call my_alloc(FAIL%IFUNC, FAIL%NFUNC,    "FAIL%IFUNC")
+      call my_alloc(FAIL%TABLE, FAIL%NTABLE,   "FAIL%TABLE")
+      allocate(FAIL%TABLE4D(FAIL%NTABLE4D))
+!
+      FAIL%IPARAM(1)  = IFORM
+      FAIL%IPARAM(2)  = DINIT
+      FAIL%IPARAM(3)  = INST
+      FAIL%IPARAM(4)  = FAILIP
+!
       FAIL%UPARAM(1)  = C1
       FAIL%UPARAM(2)  = C2
       FAIL%UPARAM(3)  = C3
       FAIL%UPARAM(4)  = C4
       FAIL%UPARAM(5)  = C5
       FAIL%UPARAM(6)  = C6
-      FAIL%UPARAM(7)  = IFORM
-      FAIL%UPARAM(8)  = DINIT
-      FAIL%UPARAM(9)  = DAM_SF
-      FAIL%UPARAM(10) = MAX_DAM
-      FAIL%UPARAM(11) = INST
-      FAIL%UPARAM(12) = N_VAL
-      FAIL%UPARAM(13) = SOFTEXP
-      FAIL%UPARAM(14) = REF_LEN
-      FAIL%UPARAM(15) = REG_SCALE
-      FAIL%UPARAM(16) = EPFMIN
-      FAIL%UPARAM(17) = FAILIP
+      FAIL%UPARAM(7)  = DAM_SF
+      FAIL%UPARAM(8)  = MAX_DAM
+      FAIL%UPARAM(9)  = N_VAL
+      FAIL%UPARAM(10) = SOFTEXP
+      FAIL%UPARAM(11) = REF_LEN
+      FAIL%UPARAM(12) = EPFMIN
+! ----------------------------------------------------------------------------------------------------------------------
+      ! create local function table using input function ID
+      nfunc = 1
+      x1scale    = one
+      x2scale    = one
+      x2vect(:)  = zero
+      yscale(1)  = reg_scale
+!
+      func_id(1) = reg_func
+      call func_table_copy(fail%table4d(1)  ,title   ,mat_id   ,      
+     1           nfunc    ,func_id ,x2vect  ,x1scale ,      
+     1           x2scale  ,yscale  ,ntable  ,table   ,      
+     1           ierror  )
 C--------------------------------------------------
 C PRINT OUT PARAMETERS
 C--------------------------------------------------

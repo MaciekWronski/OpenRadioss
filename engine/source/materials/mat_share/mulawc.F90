@@ -2533,13 +2533,13 @@
 !
                    case (43)     !    syazwan failure model
 !
-                    call fail_syazwan_c(&
-                    &jlt      ,uparamf  ,nupar    ,uvarf    ,nvarf    ,&
+                    call fail_syazwan_c(mat_elem%mat_param(imat)%fail(ifl),&
+                    &jlt      ,nvarf    ,nvarftmp ,uvarf    ,vartmp   ,&
                     &tt       ,ngl      ,ipt      ,dpla     ,el_pla   ,&
                     &signxx   ,signyy   ,signxy   ,signyz   ,signzx   ,&
                     &epsxx    ,epsyy    ,epsxy    ,epsyz    ,epszx    ,&
-                    &dfmax    ,nfunc_fail   ,ifunc_fail   ,el_len   ,foff     ,&
-                    &ipg      ,dmg_flag ,dmg_loc_scale,npf  ,tf       )
+                    &dfmax    ,el_len   ,foff     ,&
+                    &ipg      ,dmg_flag ,dmg_loc_scale)
 !
                    case (44)     !    tsai-wu criterion
 !

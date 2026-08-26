@@ -1554,12 +1554,12 @@ C---- Inievo failure model
 c
           ELSEIF (IRUPT == 43) THEN    
 c  --- Syazwan failure model                                  
-              CALL FAIL_SYAZWAN_S(
-     1          NEL     ,UPARAMF  ,NPAR    ,UVARF   ,NVARF   ,
+              CALL FAIL_SYAZWAN_S(mat_elem%mat_param(imat)%fail(ir)   ,
+     1          NEL     ,NVARF    ,NVARTMP ,UVARF   ,VARTMP  ,
      2          TT      ,NGL      ,IPG     ,DPLA    ,TDEL    ,
      3          S1      ,S2       ,S3      ,S4      ,S5      ,S6       , 
-     4          DFMAX   ,NFUNC    ,IFUNC   ,EL_LEN  ,OFF     ,
-     5          NPF     ,TF       ,GBUF%UELR,NPG    ,LBUF%OFF)  
+     4          DFMAX   ,EL_LEN   ,OFF     ,
+     5          GBUF%UELR,NPG     ,LBUF%OFF)  
           ELSEIF (IRUPT == 44) THEN                                      
 C---- Tsai-Wu failure model
               CALL FAIL_TSAIWU_S(

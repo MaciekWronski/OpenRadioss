@@ -1566,13 +1566,13 @@ c
 c
               CASE (43)     !    Syazwan failure model
 c
-                CALL FAIL_SYAZWAN_C(
-     1            JLT      ,UPARAMF  ,NUPAR    ,UVARF    ,NVARF    ,
+                CALL FAIL_SYAZWAN_C(FAIL_PARAM,
+     1            JLT      ,NVARF    ,NVARFTMP ,UVARF    ,VARTMP   ,
      2            TT       ,NGL      ,IPT      ,DPLA     ,EL_PLA   ,
      3            SIGNXX   ,SIGNYY   ,SIGNXY   ,SIGNYZ   ,SIGNZX   ,
      4            EPSXX    ,EPSYY    ,EPSXY    ,EPSYZ    ,EPSZX    ,
-     5            DFMAX    ,NFUNC_FAIL   ,IFUNC_FAIL   ,EL_LEN   ,FOFF     ,
-     6            IPG      ,DMG_FLAG ,DMG_LOC_SCALE,NPF  ,TF       )
+     5            DFMAX    ,EL_LEN   ,FOFF     ,
+     6            IPG      ,DMG_FLAG ,DMG_LOC_SCALE)
 c
               CASE (44)     !    Tsai-Wu failure model
 c

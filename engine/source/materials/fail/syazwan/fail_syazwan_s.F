@@ -30,12 +30,16 @@ Copyright>        https://www.siemens.com/en-us/products/simcenter/mechanical-si
 !||--- calls      -----------------------------------------------------
 !||    finter           ../engine/source/tools/curve/finter.F
 !||====================================================================
-      SUBROUTINE FAIL_SYAZWAN_S(
-     1     NEL     ,UPARAM   ,NUPARAM ,UVAR    ,NUVAR   ,
+      SUBROUTINE FAIL_SYAZWAN_S(FAIL  ,
+     1     NEL     ,NUVAR    ,NVARTMP ,UVAR    ,VARTMP  ,
      2     TIME    ,NGL      ,IPG     ,DPLA    ,TDELE   ,
      3     SIGNXX  ,SIGNYY   ,SIGNZZ  ,SIGNXY  ,SIGNYZ  ,SIGNZX  ,
-     4     DFMAX   ,NFUNC    ,IFUNC   ,ALDT    ,OFF     ,
-     5     NPF     ,TF       ,UELR    ,NPG     ,LOFF    )
+     4     DFMAX   ,ALDT     ,OFF     ,UELR    ,NPG     ,LOFF    )
+C-----------------------------------------------
+C    Modules
+C-----------------------------------------------
+      use fail_param_mod
+      use table_mat_vinterp_mod
 C!-----------------------------------------------
 C!   I m p l i c i t   T y p e s
 C!-----------------------------------------------
@@ -43,73 +47,53 @@ C!-----------------------------------------------
 C-----------------------------------------------
 C   G l o b a l   P a r a m e t e r s
 C-----------------------------------------------
-#include      "mvsiz_p.inc"
-#include      "scr17_c.inc"
 #include      "units_c.inc"
 #include      "comlock.inc"
-#include      "param_c.inc"
-#include      "tabsiz_c.inc"
 C-----------------------------------------------
 C   I N P U T   A r g u m e n t s
 C-----------------------------------------------
-      INTEGER, INTENT(IN) :: 
-     .   NEL    ,NUPARAM,NUVAR,NGL(NEL),IPG ,
-     .   NFUNC  ,IFUNC(NFUNC) ,NPG
-      my_real, INTENT(IN) :: 
-     .   TIME   ,UPARAM(NUPARAM),DPLA(NEL)  ,
-     .   SIGNXX(NEL),SIGNYY(NEL),SIGNZZ(NEL),
-     .   SIGNXY(NEL),SIGNYZ(NEL),SIGNZX(NEL),
-     .   ALDT(NEL)
+      INTEGER, INTENT(IN) :: NEL,NVARTMP,NUVAR,NPG,IPG
+      INTEGER :: NGL(NEL)
+      my_real, INTENT(IN) :: TIME
+      my_real, INTENT(IN) :: DPLA(NEL)  ,ALDT(NEL)
+      my_real, INTENT(IN) :: SIGNXX(NEL),SIGNYY(NEL),SIGNZZ(NEL),SIGNXY(NEL),SIGNYZ(NEL),SIGNZX(NEL)
+      type (fail_param_) ,intent(inout) :: fail    !< failure model data structure
 C-----------------------------------------------
 C   I N P U T   O U T P U T   A r g u m e n t s 
 C-----------------------------------------------
-      my_real, INTENT(INOUT) :: 
-     .   UVAR(NEL,NUVAR),LOFF(NEL),OFF(NEL),
-     .   DFMAX(NEL),TDELE(NEL),UELR(NEL)
-C-----------------------------------------------
-C   VARIABLES FOR FUNCTION INTERPOLATION 
-C-----------------------------------------------
-      INTEGER, INTENT(IN) :: NPF(SNPC)
-      my_real, INTENT(IN) :: TF(STF)
-      my_real
-     .         FINTER
-      EXTERNAL FINTER
+      integer ,dimension(nel,nvartmp) ,intent(inout) :: vartmp
+      my_real ,dimension(nel,nuvar)   ,intent(inout) :: uvar
+      my_real, INTENT(INOUT) :: LOFF(NEL),OFF(NEL),DFMAX(NEL),TDELE(NEL),UELR(NEL)
 C!-----------------------------------------------
 C!   L o c a l   V a r i a b l e s
 C!-----------------------------------------------
       INTEGER I,J,NINDX,NINDX2,FAILIP
       INTEGER, DIMENSION(NEL) :: INDX,INDX2
-      my_real
-     .   C1     ,C2       ,C3      ,C4     ,C5     ,
-     .   C6     ,REF_LEN  ,REG_SCALE
-      my_real
-     .   LAMBDA ,DYDX     ,FAC(NEL),P      ,SVM    ,
-     .   TRIAX  ,COS3THETA,LODEP   ,EPSFAIL,
-     .   DET    ,SXX      ,SYY     ,SZZ    ,EPFMIN
+      my_real :: C1,C2,C3,C4,C5,C6,REF_LEN  
+      my_real :: P,SVM,TRIAX,COS3THETA,LODEP,EPSFAIL,DET,SXX,SYY,SZZ,EPFMIN
+      my_real ,dimension(nel) :: fac,lambda, dydx
       !=======================================================================
       ! - INITIALISATION OF COMPUTATION ON TIME STEP
       !=======================================================================
       ! Recovering failure criterion parameters
-      C1        = UPARAM(1) 
-      C2        = UPARAM(2) 
-      C3        = UPARAM(3)
-      C4        = UPARAM(4) 
-      C5        = UPARAM(5)
-      C6        = UPARAM(6)
-      REF_LEN   = UPARAM(14) 
-      REG_SCALE = UPARAM(15) 
-      EPFMIN    = UPARAM(16)
-      FAILIP    = MIN(NINT(UPARAM(17)),NPG)
+      !
+      C1        = FAIL%UPARAM(1) 
+      C2        = FAIL%UPARAM(2) 
+      C3        = FAIL%UPARAM(3)
+      C4        = FAIL%UPARAM(4) 
+      C5        = FAIL%UPARAM(5)
+      C6        = FAIL%UPARAM(6)
+      REF_LEN   = FAIL%UPARAM(11) 
+      EPFMIN    = FAIL%UPARAM(12)
+
+      FAILIP    = MIN(FAIL%IPARAM(4),NPG)
 c
       ! At first timestep, initialization of the critical damage and 
       ! the element size scaling factor
       IF (UVAR(1,1) == ZERO) THEN
-        IF (IFUNC(1) > 0) THEN 
-          DO I=1,NEL
-            LAMBDA    = ALDT(I)/REF_LEN
-            UVAR(I,1) = FINTER(IFUNC(1),LAMBDA,NPF,TF,DYDX)
-            UVAR(I,1) = UVAR(I,1)*REG_SCALE
-          ENDDO
+        IF (fail%table4d(1)%notable > 0) THEN 
+          LAMBDA(1:nel) = ALDT(1:nel)/REF_LEN
+          call table_mat_vinterp(fail%table4d(1),nel,nel,vartmp,lambda,uvar(1:nel,1:1),dydx)
         ELSE 
           UVAR(1:NEL,1) = ONE
         ENDIF
