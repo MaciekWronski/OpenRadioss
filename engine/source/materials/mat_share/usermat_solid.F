@@ -1531,14 +1531,13 @@ c  --- RTCL failure model
 c
           ELSEIF (IRUPT == 41) THEN                                      
 C---- Tabulated failure model version 2
-              CALL FAIL_TAB2_S(
-     1          LLT      ,NPAR     ,NVARF    ,NFUNC    ,IFUNC    ,
-     2          NPF      ,TABLE    ,TF       ,TT       ,UPARAMF  , 
-     3          NGL      ,EL_LEN   ,DPLA     ,EPSP1    ,UVARF    ,     
+              CALL FAIL_TAB2_S(mat_elem%mat_param(imat)%fail(ir) ,
+     1          LLT      ,NVARF    ,NVARTMP  ,UVARF    ,VARTMP   ,
+     2          TT       ,NGL      ,EL_LEN   ,DPLA     ,EPSP1    ,
      5          S1       ,S2       ,S3       ,S4       ,S5       ,S6       ,               
      6          EL_TEMP  ,OFF      ,DFMAX    ,TDEL     ,LBUF%DMGSCL,
-     7          GBUF%UELR,IPG      ,NPG      ,LBUF%OFF ,NTABL_FAIL,ITABL_FAIL,
-     8          GBUF%NOFF,VOLN     ,NVARTMP  ,VARTMP   )
+     7          GBUF%UELR,IPG      ,NPG      ,LBUF%OFF ,
+     8          GBUF%NOFF,VOLN     )
 c
           ELSEIF (IRUPT == 42) THEN                                      
 C---- Inievo failure model
