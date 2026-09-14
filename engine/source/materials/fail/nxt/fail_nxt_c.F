@@ -156,8 +156,8 @@ C ---     Normalization of principal stresses vs hardening modulus
       do j = 1,nindx
         i = indx(j)
         tab_loc(j) = sig2(i)
-        ipos1(i) = vartmp(i,1)
-        ipos2(i) = vartmp(i,2)
+        ipos1(j) = vartmp(i,1)
+        ipos2(j) = vartmp(i,2)
       end do
 
       call table_mat_vinterp(fail%table4d(1),nel,nindx,ipos1,sig2,sigsr_loc,dydx)
@@ -166,8 +166,8 @@ C ---     Normalization of principal stresses vs hardening modulus
         i = indx(j)
         sigsr(i) = sigsr_loc(j)
         sig3d(i) = sig3d_loc(j)
-        vartmp(i,1) = ipos1(i)
-        vartmp(i,2) = ipos2(i)
+        vartmp(i,1) = ipos1(j)
+        vartmp(i,2) = ipos2(j)
       end do! --- The instability factor
       DO J=1,NINDX
         I = INDX(J)
